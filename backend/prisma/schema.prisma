@@ -17,11 +17,12 @@ model User {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   
-  storeUsers   StoreUser[]
-  sales        Sale[]
-  mlmNode      MlmNode?
-  commissions  Commission[]
-  payouts      Payout[]
+  storeUsers      StoreUser[]
+  sales           Sale[]
+  mlmNode         MlmNode?
+  commissions     Commission[]
+  payouts         Payout[]
+  advisorPayments Payment[]
 }
 
 model StoreUser {
@@ -81,6 +82,8 @@ model Customer {
   sales     Sale[]
   vehicles  Vehicle[]
   followUps FollowUp[]
+  goldCards GoldCard[]
+  payments  Payment[]
 }
 
 model Category {
@@ -243,4 +246,53 @@ model Reminder {
   isCompleted   Boolean    @default(false)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+}
+
+model Payment {
+  id                  String    @id @default(cuid())
+  razorpayOrderId     String    @unique
+  razorpayPaymentId   String?   @unique
+  razorpaySignature   String?
+  amount              Float
+  currency            String    @default("INR")
+  status              String    @default("PENDING") // PENDING, CAPTURED, FAILED, REFUNDED
+  paymentMethod       String?
+  customerId          String
+  customer            Customer  @relation(fields: [customerId], references: [id])
+  advisorId           String
+  advisor             User      @relation(fields: [advisorId], references: [id])
+  franchiseId         String?
+  failureReason       String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  goldCard            GoldCard?
+  invoice             GoldInvoice?
+}
+
+model GoldCard {
+  id             String    @id @default(cuid())
+  cardNumber     String    @unique
+  uniqueUID      String    @unique @default(cuid())
+  customerId     String
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  paymentId      String    @unique
+  payment        Payment   @relation(fields: [paymentId], references: [id])
+  activationDate DateTime  @default(now())
+  expiryDate     DateTime
+  status         String    @default("ACTIVE") // ACTIVE, EXPIRED, SUSPENDED
+  qrCode         String?   // base64 encoded QR
+  createdAt      DateTime  @default(now())
+}
+
+model GoldInvoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  paymentId     String    @unique
+  payment       Payment   @relation(fields: [paymentId], references: [id])
+  customerId    String
+  subtotal      Float
+  tax           Float
+  total         Float
+  createdAt     DateTime  @default(now())
 }

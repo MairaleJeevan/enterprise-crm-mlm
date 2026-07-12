@@ -1,0 +1,143 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import api from '../../../api';
+import { CheckCircle, Download, CreditCard, Star } from 'lucide-react';
+
+export default function PaymentSuccessPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pid = searchParams.get('pid');
+  const [payment, setPayment] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!pid) return;
+    api.get(`/api/payments/${pid}`)
+      .then((res) => setPayment(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [pid]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <svg className="h-8 w-8 animate-spin text-indigo-500" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+      </div>
+    );
+  }
+
+  const card = payment?.goldCard;
+  const invoice = payment?.invoice;
+  const customer = payment?.customer;
+
+  return (
+    <div className="max-w-2xl mx-auto py-8 space-y-8">
+      {/* Success Banner */}
+      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-8 text-center space-y-4">
+        <div className="flex justify-center">
+          <div className="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+            <CheckCircle className="h-8 w-8 text-emerald-400" />
+          </div>
+        </div>
+        <h1 className="text-2xl font-extrabold text-slate-100">Payment Successful!</h1>
+        <p className="text-slate-400 text-sm">Gold Membership Card has been activated successfully</p>
+        <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 text-amber-400 text-sm font-bold">
+          <Star className="h-4 w-4" />
+          Gold Member Activated
+        </div>
+      </div>
+
+      {/* Gold Card Display */}
+      {card && (
+        <div className="rounded-2xl border border-amber-500/30 bg-slate-950 p-6 space-y-4">
+          <h2 className="font-bold text-slate-200 flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-amber-400" /> Gold Card Details
+          </h2>
+          <div className="relative rounded-xl overflow-hidden shadow-2xl shadow-amber-500/20" style={{ aspectRatio: '1.586' }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600" />
+            <div className="absolute inset-0 p-5 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-900/60 text-[10px] font-semibold uppercase tracking-widest">Vortex Enterprise</p>
+                  <p className="text-slate-900 font-extrabold tracking-wider">Gold Membership</p>
+                </div>
+                <Star className="h-6 w-6 text-slate-900/40" />
+              </div>
+              <div>
+                <p className="text-slate-900 font-mono tracking-[0.3em] font-bold">{card.cardNumber}</p>
+                <div className="flex justify-between mt-1">
+                  <div>
+                    <p className="text-slate-900/50 text-[9px] uppercase">Cardholder</p>
+                    <p className="text-slate-900 font-semibold text-sm">{customer?.firstName} {customer?.lastName || ''}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-slate-900/50 text-[9px] uppercase">Expires</p>
+                    <p className="text-slate-900 font-semibold text-sm">{new Date(card.expiryDate).toLocaleDateString('en-IN', { month: '2-digit', year: 'numeric' })}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+              <p className="text-slate-500">Card Number</p>
+              <p className="text-slate-200 font-mono font-bold mt-0.5">{card.cardNumber}</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+              <p className="text-slate-500">Status</p>
+              <p className="text-emerald-400 font-bold mt-0.5 uppercase">{card.status}</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+              <p className="text-slate-500">Activated</p>
+              <p className="text-slate-200 font-medium mt-0.5">{new Date(card.activationDate).toLocaleDateString('en-IN')}</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+              <p className="text-slate-500">Valid Until</p>
+              <p className="text-slate-200 font-medium mt-0.5">{new Date(card.expiryDate).toLocaleDateString('en-IN')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice */}
+      {invoice && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-slate-200">Invoice</h2>
+            <span className="text-xs text-slate-400 font-mono">{invoice.invoiceNumber}</span>
+          </div>
+          <div className="space-y-1 text-sm text-slate-400">
+            <div className="flex justify-between"><span>Subtotal (ex. GST)</span><span>₹{invoice.subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>GST (18%)</span><span>₹{invoice.tax.toFixed(2)}</span></div>
+            <div className="flex justify-between font-bold text-slate-200 border-t border-slate-800 pt-1 mt-1"><span>Total</span><span>₹{invoice.total.toFixed(2)}</span></div>
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          onClick={() => router.push(`/dashboard/gold-card/invoice/${pid}`)}
+          className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 transition-colors"
+        >
+          <Download className="h-4 w-4" /> View Invoice
+        </button>
+        <button
+          onClick={() => router.push(`/dashboard/gold-card/card/${card?.id}`)}
+          className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-400 transition-colors"
+        >
+          <Star className="h-4 w-4" /> View Membership Card
+        </button>
+      </div>
+
+      <button
+        onClick={() => router.push('/dashboard/gold-card')}
+        className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
+      >
+        ← Sell another card
+      </button>
+    </div>
+  );
+}

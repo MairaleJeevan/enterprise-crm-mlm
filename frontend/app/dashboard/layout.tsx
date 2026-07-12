@@ -15,6 +15,8 @@ import {
   Car,
   Calendar,
   BarChart3,
+  Star,
+  BadgeDollarSign,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -79,6 +81,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Follow-ups', href: '/dashboard/followups', icon: Calendar, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive'] },
     { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['Super Admin', 'Franchise Owner', 'Store Manager'] },
     { name: 'MLM Downline', href: '/dashboard/mlm', icon: Network, roles: ['Super Admin', 'MLM Distributor'] },
+    { name: 'Gold Card Sales', href: '/dashboard/gold-card', icon: Star, roles: ['Sales Executive', 'Store Manager', 'Franchise Owner', 'MLM Distributor'] },
+    { name: 'Payment Dashboard', href: '/dashboard/gold-card/admin', icon: BadgeDollarSign, roles: ['Super Admin'] },
   ];
 
   return (
