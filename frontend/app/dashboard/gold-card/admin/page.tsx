@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../../../../api';
+import api from '../../../api';
 import { DollarSign, TrendingUp, Clock, XCircle, Search, Star, FileText } from 'lucide-react';
 
 export default function AdminPaymentDashboard() {
