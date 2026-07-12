@@ -60,7 +60,7 @@ export default function PaymentSuccessPage() {
             <div className="absolute inset-0 p-5 flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-900/60 text-[10px] font-semibold uppercase tracking-widest">Vortex Enterprise</p>
+                  <p className="text-slate-900/60 text-[10px] font-semibold uppercase tracking-widest">Jeevan Enterprise</p>
                   <p className="text-slate-900 font-extrabold tracking-wider">Gold Membership</p>
                 </div>
                 <Star className="h-6 w-6 text-slate-900/40" />

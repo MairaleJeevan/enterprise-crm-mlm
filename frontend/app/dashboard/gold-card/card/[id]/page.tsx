@@ -53,7 +53,7 @@ export default function MembershipCardPage() {
           {/* Top row */}
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-slate-900/50 text-[11px] font-bold uppercase tracking-[0.2em]">Vortex Enterprise</p>
+              <p className="text-slate-900/50 text-[11px] font-bold uppercase tracking-[0.2em]">Jeevan Enterprise</p>
               <p className="text-slate-900 font-black text-xl tracking-wide mt-0.5">GOLD MEMBERSHIP</p>
             </div>
             <div className="text-right">

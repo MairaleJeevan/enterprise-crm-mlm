@@ -30,7 +30,7 @@ export class GoldCardService {
     const qrData = JSON.stringify({
       cardNumber,
       customerId,
-      issuer: 'Vortex Gold Membership',
+      issuer: 'Jeevan Gold Membership',
       activationDate: activationDate.toISOString(),
       expiryDate: expiryDate.toISOString(),
     });

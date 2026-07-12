@@ -84,7 +84,7 @@ export default function LoginPage() {
       <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950/60 p-8 shadow-2xl backdrop-blur-xl">
         <div className="text-center">
           <h1 className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent">
-            Vortex CRM + MLM
+            Jeevan CRM + MLM
           </h1>
           <p className="mt-2 text-sm text-slate-400">
             {isLogin ? 'Sign in to access your enterprise console' : 'Register a new account'}

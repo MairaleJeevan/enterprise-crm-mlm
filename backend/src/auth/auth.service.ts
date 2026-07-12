@@ -118,6 +118,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been deactivated. Please contact support.');
+    }
+
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
     if (!passwordMatches) {
       throw new UnauthorizedException('Invalid credentials');
@@ -137,6 +141,76 @@ export class AuthService {
       },
     };
   }
+
+  async getAllUsers() {
+    return this.prisma.user.findMany({
+      include: {
+        storeUsers: {
+          include: {
+            franchise: true,
+          },
+        },
+        mlmNode: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateUser(id: string, dto: any) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updateData: any = {};
+    if (dto.email !== undefined) updateData.email = dto.email;
+    if (dto.firstName !== undefined) updateData.firstName = dto.firstName;
+    if (dto.lastName !== undefined) updateData.lastName = dto.lastName;
+    if (dto.role !== undefined) updateData.role = dto.role;
+    if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
+
+    if (dto.password) {
+      updateData.password = await bcrypt.hash(dto.password, 10);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: updateData,
+      });
+
+      // Handle franchise update for STORE_USER
+      if (updatedUser.role === 'STORE_USER' && dto.franchiseId) {
+        const storeUserExists = await tx.storeUser.findFirst({
+          where: { userId: id },
+        });
+
+        if (storeUserExists) {
+          await tx.storeUser.update({
+            where: { id: storeUserExists.id },
+            data: {
+              franchiseId: dto.franchiseId,
+              role: dto.storeRole || 'CASHIER',
+            },
+          });
+        } else {
+          await tx.storeUser.create({
+            data: {
+              userId: id,
+              franchiseId: dto.franchiseId,
+              role: dto.storeRole || 'CASHIER',
+            },
+          });
+        }
+      }
+
+      const { password, ...result } = updatedUser;
+      return result;
+    });
+  }
+
 
   private async checkAndUpgradeRank(tx: any, nodeId: string) {
     const node = await tx.mlmNode.findUnique({

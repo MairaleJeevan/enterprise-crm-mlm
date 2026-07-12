@@ -192,7 +192,7 @@ export default function GoldCardPage() {
         key: keyId,
         amount,
         currency,
-        name: 'Vortex Enterprise',
+        name: 'Jeevan Enterprise',
         description: 'Gold Membership Card',
         order_id: orderId,
         prefill: { name: customerName, email: customerEmail, contact: customerPhone },
@@ -317,7 +317,7 @@ export default function GoldCardPage() {
             <div className="absolute inset-0 p-6 flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-900/60 text-xs font-semibold uppercase tracking-widest">Vortex Enterprise</p>
+                  <p className="text-slate-900/60 text-xs font-semibold uppercase tracking-widest">Jeevan Enterprise</p>
                   <p className="text-slate-900 font-extrabold text-lg tracking-wider">Gold Membership</p>
                 </div>
                 <Star className="h-8 w-8 text-slate-900/40" />

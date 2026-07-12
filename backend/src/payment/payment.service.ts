@@ -70,7 +70,7 @@ export class PaymentService {
       customerName: `${customer.firstName} ${customer.lastName || ''}`.trim(),
       customerEmail: customer.email || '',
       customerPhone: customer.phone,
-      description: 'Vortex Gold Membership Card',
+      description: 'Jeevan Gold Membership Card',
     };
   }
 

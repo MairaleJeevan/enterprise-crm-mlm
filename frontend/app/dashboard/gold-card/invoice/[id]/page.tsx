@@ -50,9 +50,9 @@ export default function InvoicePage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-white text-sm">V</div>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-white text-sm">J</div>
                 <div>
-                  <p className="font-extrabold text-white">Vortex Enterprise</p>
+                  <p className="font-extrabold text-white">Jeevan Enterprise</p>
                   <p className="text-indigo-200 text-[10px]">Gold Membership Division</p>
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function InvoicePage() {
             <tbody>
               <tr className="border-b border-slate-800/50">
                 <td className="py-3">
-                  <p className="text-slate-200 font-medium">Vortex Gold Membership Card</p>
+                  <p className="text-slate-200 font-medium">Jeevan Gold Membership Card</p>
                   {card && <p className="text-slate-500 font-mono text-[10px] mt-0.5">{card.cardNumber}</p>}
                   <p className="text-slate-500 text-[10px]">
                     Valid: {card && new Date(card.activationDate).toLocaleDateString('en-IN')} – {card && new Date(card.expiryDate).toLocaleDateString('en-IN')}
@@ -134,7 +134,7 @@ export default function InvoicePage() {
             )}
           </div>
 
-          <p className="text-center text-xs text-slate-600">Thank you for choosing Vortex Gold Membership. This is a computer-generated invoice.</p>
+          <p className="text-center text-xs text-slate-600">Thank you for choosing Jeevan Gold Membership. This is a computer-generated invoice.</p>
         </div>
       </div>
     </div>

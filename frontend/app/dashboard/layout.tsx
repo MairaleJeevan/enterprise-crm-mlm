@@ -17,6 +17,7 @@ import {
   BarChart3,
   Star,
   BadgeDollarSign,
+  UserCog,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -83,6 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'MLM Downline', href: '/dashboard/mlm', icon: Network, roles: ['Super Admin', 'MLM Distributor'] },
     { name: 'Gold Card Sales', href: '/dashboard/gold-card', icon: Star, roles: ['Sales Executive', 'Store Manager', 'Franchise Owner', 'MLM Distributor'] },
     { name: 'Payment Dashboard', href: '/dashboard/gold-card/admin', icon: BadgeDollarSign, roles: ['Super Admin'] },
+    { name: 'Manage Users', href: '/dashboard/users', icon: UserCog, roles: ['Super Admin'] },
   ];
 
   return (
@@ -92,10 +94,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div>
           <div className="flex items-center gap-3 px-2 py-3">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-lg">
-              V
+              J
             </div>
             <div>
-              <h2 className="font-bold text-sm leading-none">Vortex CRM</h2>
+              <h2 className="font-bold text-sm leading-none">Jeevan CRM</h2>
               <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">Enterprise</span>
             </div>
           </div>
