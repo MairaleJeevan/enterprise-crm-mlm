@@ -153,131 +153,78 @@ async function main() {
     where: { userId: mlmRoot.id },
   });
 
-  // MLM Child 1 User (Sponsor: Root, Leg: LEFT)
+  // ── LEVEL 1 under Root: Bob (LEFT) & Founder Anita (RIGHT) ──────────
+  const bobUser = await prisma.user.create({
+    data: {
+      email: 'left@vortex.com', password: hashedPassword,
+      firstName: 'Bob', lastName: 'Left', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: rootNode?.id, placementId: rootNode?.id, position: 'LEFT', rank: 'Sales Advisor', personalPv: 100, groupPv: 500 } },
+    },
+  });
+  const bobNode = await prisma.mlmNode.findUnique({ where: { userId: bobUser.id } });
+
   await prisma.user.create({
     data: {
-      email: 'left@vortex.com',
-      password: hashedPassword,
-      firstName: 'Bob',
-      lastName: 'Left',
-      role: 'MLM_DISTRIBUTOR',
-      mlmNode: {
-        create: {
-          parentId: rootNode?.id,
-          placementId: rootNode?.id,
-          position: 'LEFT',
-          rank: 'Sales Advisor',
-          personalPv: 100,
-          groupPv: 500,
-        },
-      },
+      email: 'founder@vortex.com', password: hashedPassword,
+      firstName: 'Anita', lastName: 'Singh', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: rootNode?.id, placementId: rootNode?.id, position: 'RIGHT', rank: 'Founder Member', personalPv: 2000, groupPv: 1500000 } },
     },
   });
 
-  // MLM Child 2 User (Sponsor: Root, Leg: RIGHT)
+  // ── LEVEL 2 under Bob: Team Leader Priya (LEFT) & Charlie (RIGHT) ────
+  const priyaUser = await prisma.user.create({
+    data: {
+      email: 'teamleader@vortex.com', password: hashedPassword,
+      firstName: 'Priya', lastName: 'Verma', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: bobNode?.id, placementId: bobNode?.id, position: 'LEFT', rank: 'Team Leader', personalPv: 500, groupPv: 15000 } },
+    },
+  });
+  const priyaNode = await prisma.mlmNode.findUnique({ where: { userId: priyaUser.id } });
+
   await prisma.user.create({
     data: {
-      email: 'right@vortex.com',
-      password: hashedPassword,
-      firstName: 'Charlie',
-      lastName: 'Right',
-      role: 'MLM_DISTRIBUTOR',
-      mlmNode: {
-        create: {
-          parentId: rootNode?.id,
-          placementId: rootNode?.id,
-          position: 'RIGHT',
-          rank: 'Sales Advisor',
-          personalPv: 150,
-          groupPv: 150,
-        },
-      },
+      email: 'right@vortex.com', password: hashedPassword,
+      firstName: 'Charlie', lastName: 'Right', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: bobNode?.id, placementId: bobNode?.id, position: 'RIGHT', rank: 'Sales Advisor', personalPv: 150, groupPv: 150 } },
     },
   });
 
-  // MLM Dummy - Sales Advisor
+  // ── LEVEL 3 under Priya: Team Manager Suresh (LEFT) & Ravi (RIGHT) ───
+  const sureshUser = await prisma.user.create({
+    data: {
+      email: 'manager@vortex.com', password: hashedPassword,
+      firstName: 'Suresh', lastName: 'Kumar', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: priyaNode?.id, placementId: priyaNode?.id, position: 'LEFT', rank: 'Team Manager', personalPv: 1000, groupPv: 450000 } },
+    },
+  });
+  const sureshNode = await prisma.mlmNode.findUnique({ where: { userId: sureshUser.id } });
+
   await prisma.user.create({
     data: {
-      email: 'advisor@vortex.com',
-      password: hashedPassword,
-      firstName: 'Ravi',
-      lastName: 'Sharma',
-      role: 'MLM_DISTRIBUTOR',
-      mlmNode: {
-        create: {
-          parentId: rootNode?.id,
-          placementId: rootNode?.id,
-          position: 'LEFT',
-          rank: 'Sales Advisor',
-          personalPv: 80,
-          groupPv: 80,
-        },
-      },
+      email: 'advisor@vortex.com', password: hashedPassword,
+      firstName: 'Ravi', lastName: 'Sharma', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: priyaNode?.id, placementId: priyaNode?.id, position: 'RIGHT', rank: 'Sales Advisor', personalPv: 80, groupPv: 80 } },
     },
   });
 
-  // MLM Dummy - Team Leader
+  // ── LEVEL 4 under Suresh: 2 Sales Advisors ───────────────────────────
   await prisma.user.create({
     data: {
-      email: 'teamleader@vortex.com',
-      password: hashedPassword,
-      firstName: 'Priya',
-      lastName: 'Verma',
-      role: 'MLM_DISTRIBUTOR',
-      mlmNode: {
-        create: {
-          parentId: rootNode?.id,
-          placementId: rootNode?.id,
-          position: 'RIGHT',
-          rank: 'Team Leader',
-          personalPv: 500,
-          groupPv: 15000,
-        },
-      },
+      email: 'sa1@vortex.com', password: hashedPassword,
+      firstName: 'Deepa', lastName: 'Nair', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: sureshNode?.id, placementId: sureshNode?.id, position: 'LEFT', rank: 'Sales Advisor', personalPv: 60, groupPv: 60 } },
     },
   });
 
-  // MLM Dummy - Team Manager
   await prisma.user.create({
     data: {
-      email: 'manager@vortex.com',
-      password: hashedPassword,
-      firstName: 'Suresh',
-      lastName: 'Kumar',
-      role: 'MLM_DISTRIBUTOR',
-      mlmNode: {
-        create: {
-          parentId: rootNode?.id,
-          placementId: rootNode?.id,
-          position: 'LEFT',
-          rank: 'Team Manager',
-          personalPv: 1000,
-          groupPv: 450000,
-        },
-      },
+      email: 'sa2@vortex.com', password: hashedPassword,
+      firstName: 'Amit', lastName: 'Patel', role: 'MLM_DISTRIBUTOR',
+      mlmNode: { create: { parentId: sureshNode?.id, placementId: sureshNode?.id, position: 'RIGHT', rank: 'Sales Advisor', personalPv: 45, groupPv: 45 } },
     },
   });
 
-  // MLM Dummy - Founder Member
-  await prisma.user.create({
-    data: {
-      email: 'founder@vortex.com',
-      password: hashedPassword,
-      firstName: 'Anita',
-      lastName: 'Singh',
-      role: 'MLM_DISTRIBUTOR',
-      mlmNode: {
-        create: {
-          parentId: rootNode?.id,
-          placementId: rootNode?.id,
-          position: 'RIGHT',
-          rank: 'Founder Member',
-          personalPv: 2000,
-          groupPv: 1500000,
-        },
-      },
-    },
-  });
+
 
   console.log('✅ Users & MLM Nodes created');
 
