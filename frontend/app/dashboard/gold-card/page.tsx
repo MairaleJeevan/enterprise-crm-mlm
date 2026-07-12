@@ -5,13 +5,129 @@ import { useRouter } from 'next/navigation';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store';
-import { CreditCard, User, Star, Shield, CheckCircle } from 'lucide-react';
+import { CreditCard, User, Star, Shield, CheckCircle, Plus, X, UserPlus } from 'lucide-react';
 
 declare global {
   interface Window { Razorpay: any; }
 }
 
 const GOLD_CARD_PRICE = 2999;
+
+// ─── Quick Add Customer Modal ─────────────────────────────────────────────────
+function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: any) => void }) {
+  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '', email: '', city: '' });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.firstName || !form.phone) {
+      toast.error('First name and phone are required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await api.post('/api/customers', form);
+      toast.success(`Customer ${res.data.firstName} added!`);
+      onAdded(res.data);
+      onClose();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to add customer');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-lg flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-indigo-400" /> Register New Customer
+          </h2>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-200">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-slate-400 font-medium mb-1 block">First Name *</label>
+              <input
+                value={form.firstName}
+                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                placeholder="Rahul"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-400 font-medium mb-1 block">Last Name</label>
+              <input
+                value={form.lastName}
+                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                placeholder="Kumar"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400 font-medium mb-1 block">Phone Number *</label>
+            <input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="9876543210"
+              type="tel"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400 font-medium mb-1 block">Email</label>
+            <input
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="rahul@email.com"
+              type="email"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400 font-medium mb-1 block">City</label>
+            <input
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="Mumbai"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-slate-700 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            >
+              {saving ? <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> : <Plus className="h-4 w-4" />}
+              {saving ? 'Saving...' : 'Add Customer'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function GoldCardPage() {
   const router = useRouter();
@@ -20,6 +136,12 @@ export default function GoldCardPage() {
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const handleCustomerAdded = (newCustomer: any) => {
+    setCustomers((prev) => [newCustomer, ...prev]);
+    setSelectedCustomer(newCustomer.id);
+  };
 
   useEffect(() => {
     loadRazorpayScript();
@@ -135,19 +257,30 @@ export default function GoldCardPage() {
             {loadingCustomers ? (
               <div className="h-10 rounded-lg bg-slate-800 animate-pulse" />
             ) : (
-              <select
-                value={selectedCustomer}
-                onChange={(e) => setSelectedCustomer(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
-              >
-                <option value="">— Choose a customer —</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.firstName} {c.lastName || ''} — {c.phone}
-                    {c.isGoldMember ? ' ✅ Gold Member' : ''}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <select
+                  value={selectedCustomer}
+                  onChange={(e) => setSelectedCustomer(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="">— Choose existing customer —</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.firstName} {c.lastName || ''} — {c.phone}
+                      {c.isGoldMember ? ' ✅ Gold Member' : ''}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Quick Add Customer */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-indigo-500/50 bg-indigo-500/5 py-2.5 text-sm font-semibold text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-400 transition-all"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  + Register New Customer
+                </button>
+              </div>
             )}
 
             {selectedCust && (
@@ -232,6 +365,14 @@ export default function GoldCardPage() {
         <Shield className="h-4 w-4 text-emerald-500" />
         Payments secured by Razorpay. Your transaction data is encrypted.
       </div>
+
+      {/* Add Customer Modal */}
+      {showAddModal && (
+        <AddCustomerModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={handleCustomerAdded}
+        />
+      )}
     </div>
   );
 }

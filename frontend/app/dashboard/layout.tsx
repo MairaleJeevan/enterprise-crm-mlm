@@ -75,7 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive', 'MLM Distributor'] },
     { name: 'Franchises', href: '/dashboard/franchises', icon: Store, roles: ['Super Admin'] },
     { name: 'Products & Stock', href: '/dashboard/products', icon: ShoppingBag, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive', 'MLM Distributor'] },
-    { name: 'Customers', href: '/dashboard/customers', icon: Users, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive'] },
+    { name: 'Customers', href: '/dashboard/customers', icon: Users, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive', 'MLM Distributor'] },
     { name: 'POS Checkout', href: '/dashboard/sales', icon: CreditCard, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive', 'MLM Distributor'] },
     { name: 'Vehicles', href: '/dashboard/vehicles', icon: Car, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive'] },
     { name: 'Follow-ups', href: '/dashboard/followups', icon: Calendar, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive'] },
