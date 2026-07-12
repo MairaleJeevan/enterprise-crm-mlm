@@ -9,6 +9,7 @@ import { RazorpayService } from './razorpay.service';
 import { GoldCardService } from './goldcard.service';
 import { InvoiceService } from './invoice.service';
 import { CreateOrderDto, VerifyPaymentDto } from './dto/payment.dto';
+import * as bcrypt from 'bcryptjs';
 
 const GOLD_CARD_PRICE_PAISE = parseInt(process.env.GOLD_CARD_PRICE || '299900', 10);
 const GOLD_CARD_PRICE_INR = GOLD_CARD_PRICE_PAISE / 100;
@@ -121,19 +122,81 @@ export class PaymentService {
         tx, dto.paymentId, payment.customerId, payment.amount,
       );
 
-      // 4. Update Customer to Gold Member
+      // 4. Auto-create User account (MLM_DISTRIBUTOR) + MlmNode under the advisor
+      const newAccount = await this.createGoldCardUserAccount(
+        tx, payment.customer, payment.advisorId,
+      );
+
+      // 5. Update Customer: mark as Gold Member, link card and user account
       await tx.customer.update({
         where: { id: payment.customerId },
-        data: { isGoldMember: true, goldCardId: goldCard.id },
+        data: {
+          isGoldMember: true,
+          goldCardId: goldCard.id,
+          ...(newAccount ? { userId: newAccount.userId } : {}),
+        },
       });
 
-      // 5. Generate MLM Commissions (3 levels up from advisor)
+      // 6. Generate MLM Commissions (3 levels up from advisor)
       await this.generateMlmCommissions(tx, payment.advisorId, payment.amount, dto.paymentId);
 
-      return { payment: updatedPayment, goldCard, invoice };
+      return { payment: updatedPayment, goldCard, invoice, newAccount };
     });
 
     return result;
+  }
+
+  // ─── Auto-create User Account for Gold Card Member ───────────────────────
+  /**
+   * Creates a User (MLM_DISTRIBUTOR) + MlmNode for a new Gold Card customer.
+   *   Email:    customer email if provided, otherwise phone@goldmember.jeevan
+   *   Password: phone number (hashed before storage; shown once on success screen)
+   *   MLM parent: the selling advisor's MlmNode
+   *
+   * Idempotent — returns existing account if email already registered.
+   */
+  private async createGoldCardUserAccount(
+    tx: any,
+    customer: { id: string; firstName: string; lastName?: string | null; email?: string | null; phone: string },
+    advisorId: string,
+  ): Promise<{ userId: string; email: string; plainPassword: string } | null> {
+    const email = customer.email?.trim()
+      ? customer.email.trim().toLowerCase()
+      : `${customer.phone}@goldmember.jeevan`;
+
+    const plainPassword = customer.phone;
+
+    // Idempotency: skip if an account with this email already exists
+    const existing = await tx.user.findUnique({ where: { email } });
+    if (existing) {
+      return { userId: existing.id, email, plainPassword };
+    }
+
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    const newUser = await tx.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName: customer.firstName,
+        lastName: customer.lastName ?? null,
+        role: 'MLM_DISTRIBUTOR',
+      },
+    });
+
+    // Place the new member under the selling advisor in the MLM tree
+    const advisorNode = await tx.mlmNode.findUnique({ where: { userId: advisorId } });
+
+    await tx.mlmNode.create({
+      data: {
+        userId: newUser.id,
+        parentId: advisorNode?.id ?? null,
+        placementId: advisorNode?.id ?? null,
+        rank: 'Sales Advisor',
+      },
+    });
+
+    return { userId: newUser.id, email, plainPassword };
   }
 
   // ─── MLM Commission Engine ───────────────────────────────────────────────
@@ -219,7 +282,18 @@ export class PaymentService {
     const payment = await this.prisma.payment.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                role: true,
+                mlmNode: { select: { id: true, rank: true } },
+              },
+            },
+          },
+        },
         advisor: { select: { firstName: true, lastName: true, email: true } },
         goldCard: true,
         invoice: true,

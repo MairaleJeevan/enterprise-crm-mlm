@@ -23,6 +23,7 @@ model User {
   commissions     Commission[]
   payouts         Payout[]
   advisorPayments Payment[]
+  customerProfile Customer?    // Gold Card holder account
 }
 
 model StoreUser {
@@ -76,6 +77,8 @@ model Customer {
   franchise Franchise? @relation(fields: [franchiseId], references: [id])
   isGoldMember Boolean @default(false)
   goldCardId String?
+  userId    String?   @unique   // linked User account (created on Gold Card purchase)
+  user      User?     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   

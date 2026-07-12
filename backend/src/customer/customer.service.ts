@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 
@@ -7,6 +7,16 @@ export class CustomerService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateCustomerDto) {
+    // Guard: phone must be unique per customer record
+    const existingPhone = await this.prisma.customer.findFirst({
+      where: { phone: dto.phone },
+    });
+    if (existingPhone) {
+      throw new ConflictException(
+        `A customer with phone number ${dto.phone} already exists`,
+      );
+    }
+
     if (dto.franchiseId) {
       const franchise = await this.prisma.franchise.findUnique({
         where: { id: dto.franchiseId },
