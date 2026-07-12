@@ -43,7 +43,9 @@ export class PaymentService {
       throw new BadRequestException('Customer already has an active Gold Membership Card');
     }
 
-    const receipt = `gold_${dto.customerId}_${Date.now()}`;
+    const shortId = dto.customerId.slice(-8);
+    const ts = Date.now().toString().slice(-8);
+    const receipt = `gc_${shortId}_${ts}`;  // max ~21 chars
     const order = await this.razorpay.createOrder(GOLD_CARD_PRICE_PAISE, receipt);
 
     // Store pending payment record

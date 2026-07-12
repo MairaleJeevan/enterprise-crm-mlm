@@ -1,10 +1,11 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
-import Razorpay from 'razorpay';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Razorpay = require('razorpay');
 
 @Injectable()
 export class RazorpayService {
-  private razorpay: Razorpay;
+  private razorpay: any;
 
   constructor() {
     const keyId = process.env.RAZORPAY_KEY_ID;
