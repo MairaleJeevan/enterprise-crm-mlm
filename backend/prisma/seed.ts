@@ -191,6 +191,90 @@ async function main() {
     },
   });
 
+  // MLM Dummy - Sales Advisor
+  await prisma.user.create({
+    data: {
+      email: 'advisor@vortex.com',
+      password: hashedPassword,
+      firstName: 'Ravi',
+      lastName: 'Sharma',
+      role: 'MLM_DISTRIBUTOR',
+      mlmNode: {
+        create: {
+          parentId: rootNode?.id,
+          placementId: rootNode?.id,
+          position: 'LEFT',
+          rank: 'Sales Advisor',
+          personalPv: 80,
+          groupPv: 80,
+        },
+      },
+    },
+  });
+
+  // MLM Dummy - Team Leader
+  await prisma.user.create({
+    data: {
+      email: 'teamleader@vortex.com',
+      password: hashedPassword,
+      firstName: 'Priya',
+      lastName: 'Verma',
+      role: 'MLM_DISTRIBUTOR',
+      mlmNode: {
+        create: {
+          parentId: rootNode?.id,
+          placementId: rootNode?.id,
+          position: 'RIGHT',
+          rank: 'Team Leader',
+          personalPv: 500,
+          groupPv: 15000,
+        },
+      },
+    },
+  });
+
+  // MLM Dummy - Team Manager
+  await prisma.user.create({
+    data: {
+      email: 'manager@vortex.com',
+      password: hashedPassword,
+      firstName: 'Suresh',
+      lastName: 'Kumar',
+      role: 'MLM_DISTRIBUTOR',
+      mlmNode: {
+        create: {
+          parentId: rootNode?.id,
+          placementId: rootNode?.id,
+          position: 'LEFT',
+          rank: 'Team Manager',
+          personalPv: 1000,
+          groupPv: 450000,
+        },
+      },
+    },
+  });
+
+  // MLM Dummy - Founder Member
+  await prisma.user.create({
+    data: {
+      email: 'founder@vortex.com',
+      password: hashedPassword,
+      firstName: 'Anita',
+      lastName: 'Singh',
+      role: 'MLM_DISTRIBUTOR',
+      mlmNode: {
+        create: {
+          parentId: rootNode?.id,
+          placementId: rootNode?.id,
+          position: 'RIGHT',
+          rank: 'Founder Member',
+          personalPv: 2000,
+          groupPv: 1500000,
+        },
+      },
+    },
+  });
+
   console.log('✅ Users & MLM Nodes created');
 
   // 5. Create Customer
