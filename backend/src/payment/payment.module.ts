@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MlmModule } from '../mlm/mlm.module';
 import { PaymentController } from './payment.controller';
 import { WebhookController } from './webhook.controller';
 import { PaymentService } from './payment.service';
@@ -9,9 +10,10 @@ import { InvoiceService } from './invoice.service';
 import { QrService } from './qr.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MlmModule],
   controllers: [PaymentController, WebhookController],
   providers: [PaymentService, RazorpayService, GoldCardService, InvoiceService, QrService],
   exports: [PaymentService],
 })
 export class PaymentModule {}
+

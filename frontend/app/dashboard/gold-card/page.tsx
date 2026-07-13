@@ -38,8 +38,8 @@ function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-5">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-slate-700 bg-slate-900 p-5 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-lg flex items-center gap-2">
@@ -51,14 +51,14 @@ function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-400 font-medium mb-1 block">First Name *</label>
               <input
                 value={form.firstName}
                 onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                 placeholder="Rahul"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
                 required
               />
             </div>
@@ -68,7 +68,7 @@ function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: 
                 value={form.lastName}
                 onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                 placeholder="Kumar"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -80,7 +80,7 @@ function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: 
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               placeholder="9876543210"
               type="tel"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
               required
             />
           </div>
@@ -92,7 +92,7 @@ function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: 
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="rahul@email.com"
               type="email"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -102,11 +102,11 @@ function AddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: 
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
               placeholder="Mumbai"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
-          <div className="flex gap-3 pt-1">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}

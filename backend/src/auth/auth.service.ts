@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { MlmRankService } from '../mlm/mlm-rank.service';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private mlmRankService: MlmRankService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -96,7 +98,7 @@ export class AuthService {
         });
 
         if (parentNodeId) {
-          await this.checkAndUpgradeRank(tx, parentNodeId);
+          await this.mlmRankService.checkAndUpgradeRank(tx, parentNodeId);
         }
       }
 
@@ -212,55 +214,4 @@ export class AuthService {
   }
 
 
-  private async checkAndUpgradeRank(tx: any, nodeId: string) {
-    const node = await tx.mlmNode.findUnique({
-      where: { id: nodeId },
-      include: {
-        children: true,
-      },
-    });
-    if (!node) return;
-
-    const directSponsorCount = node.children.length;
-    const orgCount = await this.getOrganizationCount(tx, nodeId);
-    const teamLeadersCount = node.children.filter(
-      (c) => c.rank === 'Team Leader (TL)' || c.rank === 'Team Manager' || c.rank === 'Founder Member'
-    ).length;
-
-    let newRank = 'Sales Advisor';
-
-    if (orgCount >= 27000) {
-      newRank = 'Founder Member';
-    } else if (teamLeadersCount >= 30) {
-      newRank = 'Team Manager';
-    } else if (directSponsorCount >= 30) {
-      newRank = 'Team Leader (TL)';
-    }
-
-    if (newRank !== node.rank) {
-      await tx.mlmNode.update({
-        where: { id: nodeId },
-        data: { rank: newRank },
-      });
-    }
-
-    if (node.parentId) {
-      await this.checkAndUpgradeRank(tx, node.parentId);
-    }
-  }
-
-  private async getOrganizationCount(tx: any, nodeId: string): Promise<number> {
-    let count = 0;
-    const queue = [nodeId];
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      const children = await tx.mlmNode.findMany({
-        where: { parentId: currentId },
-        select: { id: true },
-      });
-      count += children.length;
-      queue.push(...children.map((c) => c.id));
-    }
-    return count;
-  }
 }

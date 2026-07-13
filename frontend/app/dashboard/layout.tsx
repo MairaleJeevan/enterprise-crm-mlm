@@ -18,6 +18,8 @@ import {
   Star,
   BadgeDollarSign,
   UserCog,
+  Menu,
+  X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,16 +28,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { token, user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Secure dashboard client-side
     const storedToken = localStorage.getItem('token');
     if (!storedToken) {
       toast.error('Session expired, please login.');
       router.push('/login');
     }
   }, [token, router]);
+
+  // Close sidebar on route change (mobile nav)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   if (!mounted || !user) {
     return (
@@ -87,78 +94,136 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Manage Users', href: '/dashboard/users', icon: UserCog, roles: ['Super Admin'] },
   ];
 
+  const filteredNav = navItems.filter((item) => item.roles.includes(displayRole));
+
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col justify-between">
+      <div>
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-2 py-3">
+          <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-lg">
+            J
+          </div>
+          <div>
+            <h2 className="font-bold text-sm leading-none">Jeevan CRM</h2>
+            <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">Enterprise</span>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <nav className="mt-6 space-y-0.5">
+          {filteredNav.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-indigo-600/10 text-indigo-400 border-l-2 border-indigo-500'
+                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{item.name}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* User card + logout */}
+      <div className="border-t border-slate-900 pt-4 space-y-3">
+        <div className="flex items-center gap-3 px-2">
+          <div className="h-9 w-9 shrink-0 rounded-full bg-slate-800 flex items-center justify-center">
+            <UserIcon className="h-4 w-4 text-slate-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold truncate leading-tight">{user.firstName} {user.lastName || ''}</p>
+            <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider">{displayRole}</span>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen bg-slate-950 font-sans text-slate-100 antialiased">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-900 bg-slate-950/90 p-5 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-3 px-2 py-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-lg">
-              J
-            </div>
-            <div>
-              <h2 className="font-bold text-sm leading-none">Jeevan CRM</h2>
-              <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">Enterprise</span>
-            </div>
-          </div>
 
-          <nav className="mt-8 space-y-1">
-            {navItems
-              .filter((item) => item.roles.includes(displayRole))
-              .map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.href}
-                    onClick={() => router.push(item.href)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      isActive
-                        ? 'bg-indigo-600/10 text-indigo-400 border-l-2 border-indigo-500'
-                        : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.name}
-                  </button>
-                );
-              })}
-          </nav>
-        </div>
-
-        {/* User Card */}
-        <div className="border-t border-slate-900 pt-4 space-y-3">
-          <div className="flex items-center gap-3 px-2">
-            <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center">
-              <UserIcon className="h-4 w-4 text-slate-400" />
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold truncate leading-tight">{user.firstName} {user.lastName || ''}</p>
-              <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider">{displayRole}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
-        </div>
+      {/* ── Desktop Sidebar (hidden on mobile) ─────────────────────────── */}
+      <aside className="hidden lg:flex w-64 shrink-0 border-r border-slate-900 bg-slate-950/90 flex-col p-5">
+        <SidebarContent />
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-x-hidden">
+      {/* ── Mobile Sidebar Overlay ──────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile Sidebar Drawer ───────────────────────────────────────── */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-800 bg-slate-950 p-5 flex flex-col transition-transform duration-300 ease-in-out lg:hidden ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Close button */}
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <SidebarContent />
+      </aside>
+
+      {/* ── Main area ───────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0">
+
         {/* Header */}
-        <header className="h-16 border-b border-slate-900 bg-slate-950/50 backdrop-blur-md px-8 flex items-center justify-end">
-          <div className="text-xs text-slate-500 font-medium">
+        <header className="sticky top-0 z-30 h-14 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4">
+          {/* Hamburger — only on mobile */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {/* Mobile logo (shown when sidebar is closed) */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-sm">
+              J
+            </div>
+            <span className="text-sm font-bold text-slate-200">Jeevan CRM</span>
+          </div>
+
+          <div className="ml-auto text-xs text-slate-500 font-medium hidden sm:block">
             System status: <span className="text-emerald-500">Connected</span>
+          </div>
+
+          {/* Mobile: current user chip */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center">
+              <UserIcon className="h-3.5 w-3.5 text-slate-400" />
+            </div>
           </div>
         </header>
 
-        {/* Content Wrapper */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        {/* Page content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden">
           {children}
         </main>
       </div>

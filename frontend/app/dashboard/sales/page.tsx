@@ -171,19 +171,19 @@ export default function POSPage() {
   );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:h-[calc(100vh-140px)]">
       {/* Product Selection Catalog */}
-      <div className="lg:col-span-2 flex flex-col space-y-4 h-full overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="lg:col-span-2 flex flex-col space-y-4 lg:h-full overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold">POS Terminal</h1>
+            <h1 className="text-lg sm:text-xl font-bold">POS Terminal</h1>
             <p className="text-xs text-slate-500">Scan barcodes or select items to place orders</p>
           </div>
           <div>
             <select
               value={selectedFranchiseId}
               onChange={(e) => setSelectedFranchiseId(e.target.value)}
-              className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 outline-hidden"
+              className="w-full sm:w-auto rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-base sm:text-xs text-slate-200 outline-hidden"
             >
               <option value="">Select Branch</option>
               {franchises.map((f) => (
@@ -200,11 +200,11 @@ export default function POSPage() {
             placeholder="Search products by SKU or Name..."
             value={prodSearch}
             onChange={(e) => setProdSearch(e.target.value)}
-            className="w-full rounded-lg border border-slate-800 bg-slate-950/40 py-2.5 pl-10 pr-4 text-sm outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-slate-800 bg-slate-950/40 py-2.5 pl-10 pr-4 text-base sm:text-sm outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 pr-1">
+        <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 pr-1">
           {filteredProducts.map((p) => {
             const isOutOfStock = (p.inventory?.quantity || 0) <= 0;
             return (
@@ -212,7 +212,7 @@ export default function POSPage() {
                 key={p.id}
                 disabled={isOutOfStock}
                 onClick={() => handleAddToCart(p)}
-                className={`rounded-xl border p-4 text-left transition-all backdrop-blur-xs flex flex-col justify-between h-40 ${
+                className={`rounded-xl border p-3 sm:p-4 text-left transition-all backdrop-blur-xs flex flex-col justify-between h-32 sm:h-40 ${
                   isOutOfStock
                     ? 'border-slate-900 bg-slate-950/20 opacity-50 cursor-not-allowed'
                     : 'border-slate-900 bg-slate-950/40 hover:border-slate-800 hover:bg-slate-900/10'
@@ -220,7 +220,7 @@ export default function POSPage() {
               >
                 <div>
                   <div className="flex justify-between items-start gap-1">
-                    <h3 className="font-bold text-sm text-slate-200 leading-tight truncate">{p.name}</h3>
+                    <h3 className="font-bold text-xs sm:text-sm text-slate-200 leading-tight truncate">{p.name}</h3>
                     <span className="text-[9px] bg-slate-900 text-slate-400 font-mono px-1.5 py-0.5 rounded shrink-0">{p.unit || 'PCS'}</span>
                   </div>
                   <span className="text-[10px] text-slate-500 block font-mono mt-0.5">SKU: {p.sku}</span>
@@ -244,7 +244,7 @@ export default function POSPage() {
       </div>
 
       {/* POS Cart Sidebar */}
-      <div className="rounded-xl border border-slate-900 bg-slate-950/25 p-5 flex flex-col justify-between h-full overflow-hidden">
+      <div className="rounded-xl border border-slate-900 bg-slate-950/25 p-4 sm:p-5 flex flex-col justify-between lg:h-full overflow-hidden">
         <div className="space-y-4 flex flex-col h-[70%] overflow-hidden">
           <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
             <ShoppingCart className="h-5 w-5 text-indigo-400" />
@@ -264,7 +264,7 @@ export default function POSPage() {
                   setCustSearch(e.target.value);
                   setSelectedCustomerId('');
                 }}
-                className="w-full rounded-md border border-slate-900 bg-slate-950/60 py-1.5 pl-8 pr-3 text-xs outline-hidden focus:border-indigo-500"
+                className="w-full rounded-md border border-slate-900 bg-slate-950/60 py-2 pl-8 pr-3 text-base sm:text-xs outline-hidden focus:border-indigo-500"
               />
             </div>
 
@@ -315,14 +315,14 @@ export default function POSPage() {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleQtyChange(item.product.id, -1)}
-                      className="h-6 w-6 rounded border border-slate-800 bg-slate-900 flex items-center justify-center hover:bg-slate-800"
+                      className="h-7 w-7 sm:h-6 sm:w-6 rounded border border-slate-800 bg-slate-900 flex items-center justify-center hover:bg-slate-800"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
                     <span className="font-bold w-4 text-center">{item.quantity}</span>
                     <button
                       onClick={() => handleQtyChange(item.product.id, 1)}
-                      className="h-6 w-6 rounded border border-slate-800 bg-slate-900 flex items-center justify-center hover:bg-slate-800"
+                      className="h-7 w-7 sm:h-6 sm:w-6 rounded border border-slate-800 bg-slate-900 flex items-center justify-center hover:bg-slate-800"
                     >
                       <Plus className="h-3 w-3" />
                     </button>

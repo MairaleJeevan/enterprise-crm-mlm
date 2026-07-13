@@ -94,7 +94,7 @@ export default function DashboardOverview() {
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-indigo-400">Super Admin Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-indigo-400">Super Admin Dashboard</h1>
             <p className="text-sm text-slate-400">Welcome back, {user.firstName}. Here is what is happening across your network today.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -242,8 +242,8 @@ export default function DashboardOverview() {
                   <tr className="border-b border-slate-900 text-slate-500 uppercase tracking-wider">
                     <th className="py-2.5">Ticket ID</th>
                     <th className="py-2.5">Requester</th>
-                    <th className="py-2.5">Subject</th>
-                    <th className="py-2.5">Priority</th>
+                    <th className="py-2.5 hidden sm:table-cell">Subject</th>
+                    <th className="py-2.5 hidden sm:table-cell">Priority</th>
                     <th className="py-2.5 text-right">Status</th>
                   </tr>
                 </thead>
@@ -251,22 +251,22 @@ export default function DashboardOverview() {
                   <tr>
                     <td className="py-3 font-semibold text-indigo-400">#TK-1021</td>
                     <td className="py-3">David Jenkins</td>
-                    <td className="py-3">Commission payouts delay</td>
-                    <td className="py-3"><span className="rounded-md bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-400 uppercase tracking-wider">High</span></td>
+                    <td className="py-3 hidden sm:table-cell">Commission payouts delay</td>
+                    <td className="py-3 hidden sm:table-cell"><span className="rounded-md bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-400 uppercase tracking-wider">High</span></td>
                     <td className="py-3 text-right"><span className="text-emerald-400 font-bold">Open</span></td>
                   </tr>
                   <tr>
                     <td className="py-3 font-semibold text-indigo-400">#TK-1022</td>
                     <td className="py-3">Michael Davis</td>
-                    <td className="py-3">Sales check out system latency</td>
-                    <td className="py-3"><span className="rounded-md bg-yellow-500/10 px-1.5 py-0.5 text-[9px] font-bold text-yellow-500 uppercase tracking-wider">Medium</span></td>
+                    <td className="py-3 hidden sm:table-cell">Sales check out system latency</td>
+                    <td className="py-3 hidden sm:table-cell"><span className="rounded-md bg-yellow-500/10 px-1.5 py-0.5 text-[9px] font-bold text-yellow-500 uppercase tracking-wider">Medium</span></td>
                     <td className="py-3 text-right"><span className="text-slate-500 font-bold">Pending</span></td>
                   </tr>
                   <tr>
                     <td className="py-3 font-semibold text-indigo-400">#TK-1023</td>
                     <td className="py-3">Jane Robs</td>
-                    <td className="py-3">Gold Card registration error</td>
-                    <td className="py-3"><span className="rounded-md bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-400 uppercase tracking-wider">High</span></td>
+                    <td className="py-3 hidden sm:table-cell">Gold Card registration error</td>
+                    <td className="py-3 hidden sm:table-cell"><span className="rounded-md bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-400 uppercase tracking-wider">High</span></td>
                     <td className="py-3 text-right"><span className="text-emerald-400 font-bold">Solved</span></td>
                   </tr>
                 </tbody>
@@ -314,8 +314,8 @@ export default function DashboardOverview() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-indigo-400">Welcome back, {user.firstName}</h1>
-          <div className="mt-3 flex items-center justify-between bg-slate-900/40 rounded-lg border border-slate-800 p-4 max-w-xl">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-indigo-400">Welcome back, {user.firstName}</h1>
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/40 rounded-lg border border-slate-800 p-4 max-w-xl">
             <div>
               <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Rank Status</p>
               <h4 className="text-sm font-bold text-indigo-400 mt-1">{treeData?.rank || 'Sales Advisor'}</h4>
@@ -454,7 +454,7 @@ export default function DashboardOverview() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-indigo-400">Store Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-indigo-400">Store Dashboard</h1>
           <p className="text-sm text-slate-400">Manage your inventory, checkout orders and franchise customer growth.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -605,8 +605,8 @@ export default function DashboardOverview() {
                   <tr className="border-b border-slate-900 text-slate-500 uppercase tracking-wider font-mono">
                     <th className="py-2.5">Order ID</th>
                     <th className="py-2.5">Customer</th>
-                    <th className="py-2.5">Date</th>
-                    <th className="py-2.5">Payment Method</th>
+                    <th className="py-2.5 hidden sm:table-cell">Date</th>
+                    <th className="py-2.5 hidden sm:table-cell">Payment Method</th>
                     <th className="py-2.5 text-right">Amount</th>
                   </tr>
                 </thead>
@@ -615,8 +615,8 @@ export default function DashboardOverview() {
                     <tr key={sale.id}>
                       <td className="py-3 font-semibold text-slate-200">{sale.invoiceNumber}</td>
                       <td className="py-3">{sale.customer ? `${sale.customer.firstName} ${sale.customer.lastName || ''}`.trim() : 'Guest'}</td>
-                      <td className="py-3">{new Date(sale.saleDate).toLocaleDateString()}</td>
-                      <td className="py-3">{sale.paymentMethod || 'Cash'}</td>
+                      <td className="py-3 hidden sm:table-cell">{new Date(sale.saleDate).toLocaleDateString()}</td>
+                      <td className="py-3 hidden sm:table-cell">{sale.paymentMethod || 'Cash'}</td>
                       <td className="py-3 text-right font-bold text-slate-100">₹{sale.total.toFixed(2)}</td>
                     </tr>
                   ))}

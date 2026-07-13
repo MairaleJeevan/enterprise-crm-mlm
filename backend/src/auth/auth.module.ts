@@ -4,10 +4,12 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { MlmModule } from '../mlm/mlm.module';
 
 @Module({
   imports: [
     PassportModule,
+    MlmModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'enterprise_crm_mlm_secret_key_2026',
       signOptions: { expiresIn: '7d' },

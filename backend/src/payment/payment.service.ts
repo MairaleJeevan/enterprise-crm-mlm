@@ -8,16 +8,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RazorpayService } from './razorpay.service';
 import { GoldCardService } from './goldcard.service';
 import { InvoiceService } from './invoice.service';
+import { MlmRankService } from '../mlm/mlm-rank.service';
 import { CreateOrderDto, VerifyPaymentDto } from './dto/payment.dto';
 import * as bcrypt from 'bcryptjs';
 
 const GOLD_CARD_PRICE_PAISE = parseInt(process.env.GOLD_CARD_PRICE || '299900', 10);
 const GOLD_CARD_PRICE_INR = GOLD_CARD_PRICE_PAISE / 100;
 
-// MLM Commission rates
-const COMMISSION_LEVEL_1 = 0.10; // 10% Direct Advisor
-const COMMISSION_LEVEL_2 = 0.05; // 5% Level 2
-const COMMISSION_LEVEL_3 = 0.02; // 2% Level 3
+// MLM Commission — flat amounts paid to the selling advisor and upline by rank
+const COMMISSION_SELLING_ADVISOR = 500;   // the advisor who made the sale
+const COMMISSION_TL             = 300;   // first Team Leader (TL) upline
+const COMMISSION_TEAM_MANAGER   = 200;   // first Team Manager upline
+const COMMISSION_FOUNDER        = 25;    // first Founder Member upline
 
 @Injectable()
 export class PaymentService {
@@ -26,6 +28,7 @@ export class PaymentService {
     private razorpay: RazorpayService,
     private goldCardService: GoldCardService,
     private invoiceService: InvoiceService,
+    private mlmRankService: MlmRankService,
   ) {}
 
   // ─── Create Razorpay Order ────────────────────────────────────────────────
@@ -196,44 +199,88 @@ export class PaymentService {
       },
     });
 
+    // Re-evaluate the advisor's rank now they have a new direct member
+    if (advisorNode) {
+      await this.mlmRankService.checkAndUpgradeRank(tx, advisorNode.id);
+    }
+
     return { userId: newUser.id, email, plainPassword };
   }
 
+  // ─── Rank Upgrade Engine ──────────────────────────────────────────────────
+  // Delegated to shared MlmRankService (injected via constructor)
+
   // ─── MLM Commission Engine ───────────────────────────────────────────────
-  private async generateMlmCommissions(tx: any, advisorId: string, saleAmount: number, paymentId: string) {
-    const advisorNode = await tx.mlmNode.findUnique({ where: { userId: advisorId } });
+  /**
+   * Commission structure (flat amounts per Gold Card sale):
+   *   Selling advisor          → ₹500
+   *   First TL upline          → ₹300
+   *   First Team Manager upline → ₹200
+   *   First Founder upline     → ₹25
+   *
+   * Walk up the parentId chain from the advisor's node.
+   * Each rank is paid exactly once; already-paid ranks are skipped.
+   */
+  private async generateMlmCommissions(
+    tx: any,
+    advisorId: string,
+    _saleAmount: number,
+    paymentId: string,
+  ) {
+    const advisorNode = await tx.mlmNode.findUnique({
+      where: { userId: advisorId },
+      include: { user: true },
+    });
     if (!advisorNode) return;
 
-    const levels = [
-      { rate: COMMISSION_LEVEL_1, type: 'GOLD_CARD_L1', label: 'Level 1 Gold Card Commission' },
-      { rate: COMMISSION_LEVEL_2, type: 'GOLD_CARD_L2', label: 'Level 2 Gold Card Commission' },
-      { rate: COMMISSION_LEVEL_3, type: 'GOLD_CARD_L3', label: 'Level 3 Gold Card Commission' },
-    ];
+    // 1. Pay the selling advisor their flat commission
+    await tx.commission.create({
+      data: {
+        userId: advisorId,
+        amount: COMMISSION_SELLING_ADVISOR,
+        type: 'GOLD_CARD_ADVISOR',
+        description: `Selling advisor commission — Gold Card sale`,
+        status: 'PENDING',
+        saleId: paymentId,
+      },
+    });
 
-    let currentNodeId = advisorNode.parentId;
+    // Ranks still owed payment as we walk upward
+    const pending = new Map<string, number>([
+      ['Team Leader (TL)', COMMISSION_TL],
+      ['Team Manager',     COMMISSION_TEAM_MANAGER],
+      ['Founder Member',   COMMISSION_FOUNDER],
+    ]);
 
-    for (const level of levels) {
-      if (!currentNodeId) break;
+    const rankType: Record<string, string> = {
+      'Team Leader (TL)': 'GOLD_CARD_TL',
+      'Team Manager':     'GOLD_CARD_TM',
+      'Founder Member':   'GOLD_CARD_FOUNDER',
+    };
 
+    // 2. Walk up the tree and pay the first matching upline for each rank
+    let currentNodeId: string | null = advisorNode.parentId;
+
+    while (currentNodeId && pending.size > 0) {
       const node = await tx.mlmNode.findUnique({
         where: { id: currentNodeId },
-        include: { user: true },
       });
-
       if (!node) break;
 
-      const commissionAmount = parseFloat((saleAmount * level.rate).toFixed(2));
-
-      await tx.commission.create({
-        data: {
-          userId: node.userId,
-          amount: commissionAmount,
-          type: level.type,
-          description: `${level.label} — Gold Card sale ₹${saleAmount}`,
-          status: 'PENDING',
-          saleId: paymentId,
-        },
-      });
+      const amount = pending.get(node.rank);
+      if (amount !== undefined) {
+        await tx.commission.create({
+          data: {
+            userId: node.userId,
+            amount,
+            type: rankType[node.rank],
+            description: `${node.rank} commission — Gold Card sale`,
+            status: 'PENDING',
+            saleId: paymentId,
+          },
+        });
+        pending.delete(node.rank); // pay each rank only once
+      }
 
       currentNodeId = node.parentId;
     }
