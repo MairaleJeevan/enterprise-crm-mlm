@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
-import { Plus, Tag, Layers, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Plus, Tag, Layers, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -123,37 +123,41 @@ export default function ProductsPage() {
     }
   };
 
+  const inputCls = 'mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-slate-200 outline-hidden text-base sm:text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors';
+  const labelCls = 'text-xs font-semibold text-slate-400';
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header — stacks on mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Products & Stock</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Products & Stock</h1>
           <p className="text-sm text-slate-400">Manage catalog and adjust real-time stock levels</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowCategoryModal(true)}
-            className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-2 text-sm font-semibold text-slate-200 transition-all hover:bg-slate-900"
+            className="flex items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-sm font-semibold text-slate-200 transition-all hover:bg-slate-900 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" /> Add Category
           </button>
           <button
             onClick={() => setShowProductModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-indigo-500"
+            className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-indigo-500 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" /> Add Product
           </button>
         </div>
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-900 bg-slate-950/20 p-4">
-        <div>
+      {/* Filter bar — full-width selection on mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-xl border border-slate-900 bg-slate-950/20 p-4">
+        <div className="w-full sm:w-auto">
           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
           <select
             value={selectedFranchise}
             onChange={(e) => setSelectedFranchise(e.target.value)}
-            className="mt-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 outline-hidden focus:border-indigo-500"
+            className="mt-1 w-full sm:w-auto rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-base sm:text-xs text-slate-200 outline-hidden focus:border-indigo-500"
           >
             <option value="">All Branches</option>
             {franchises.map((f) => (
@@ -162,12 +166,12 @@ export default function ProductsPage() {
           </select>
         </div>
 
-        <div>
+        <div className="w-full sm:w-auto">
           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="mt-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 outline-hidden focus:border-indigo-500"
+            className="mt-1 w-full sm:w-auto rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-base sm:text-xs text-slate-200 outline-hidden focus:border-indigo-500"
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -177,8 +181,8 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="rounded-xl border border-slate-900 bg-slate-950/20 overflow-hidden">
+      {/* ── Desktop Products Table (hidden on mobile) ────────────────────── */}
+      <div className="hidden sm:block rounded-xl border border-slate-900 bg-slate-950/20 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-400">
             <thead>
@@ -236,13 +240,13 @@ export default function ProductsPage() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleQuickStockAdjust(p.id, -5)}
-                            className="rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-red-400 hover:bg-slate-800 transition-colors"
+                            className="rounded-md border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs text-red-400 hover:bg-slate-800 transition-colors"
                           >
                             -5
                           </button>
                           <button
                             onClick={() => handleQuickStockAdjust(p.id, 5)}
-                            className="rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-emerald-400 hover:bg-slate-800 transition-colors"
+                            className="rounded-md border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs text-emerald-400 hover:bg-slate-800 transition-colors"
                           >
                             +5
                           </button>
@@ -257,36 +261,112 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Category Modal */}
+      {/* ── Mobile Product Card Layout (visible only on mobile) ─────────── */}
+      <div className="sm:hidden space-y-3">
+        {products.length === 0 ? (
+          <div className="rounded-xl border border-slate-900 bg-slate-950/20 p-6 text-center text-slate-500 text-sm">
+            No products match the criteria.
+          </div>
+        ) : (
+          products.map((p) => {
+            const qty = p.inventory?.quantity || 0;
+            const isLow = qty <= (p.inventory?.reorderLevel || 0);
+
+            return (
+              <div key={p.id} className="rounded-xl border border-slate-900 bg-slate-950/30 p-4 space-y-3">
+                {/* SKU + Name */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-200 truncate">{p.name}</p>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">SKU: {p.sku}</p>
+                  </div>
+                  <span className="rounded-md bg-slate-850 px-2 py-0.5 text-[10px] text-slate-400 shrink-0">
+                    {p.category?.name || 'Uncat.'}
+                  </span>
+                </div>
+
+                {/* Stock Level + Prices */}
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-400 border-t border-slate-900 pt-2">
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Stock Level</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className={`font-bold ${isLow ? 'text-red-400' : 'text-slate-200'}`}>
+                        {qty} {p.unit || 'PCS'}
+                      </span>
+                      {isLow && (
+                        <span className="rounded bg-red-500/10 px-1 py-0.5 text-[8px] font-bold text-red-400 uppercase">
+                          Low
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Selling Price</span>
+                    <span className="font-bold text-slate-200 mt-0.5 block">₹{p.sellingPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Quick Stock Adjust Buttons */}
+                <div className="flex items-center gap-2 border-t border-slate-900 pt-3">
+                  <span className="text-[10px] text-slate-500 font-medium">Quick Adjust:</span>
+                  <button
+                    onClick={() => handleQuickStockAdjust(p.id, -5)}
+                    className="flex-1 rounded-md border border-slate-800 bg-slate-900 py-1.5 text-xs text-red-400 active:bg-slate-800"
+                  >
+                    -5 Quantity
+                  </button>
+                  <button
+                    onClick={() => handleQuickStockAdjust(p.id, 5)}
+                    className="flex-1 rounded-md border border-slate-800 bg-slate-900 py-1.5 text-xs text-emerald-400 active:bg-slate-800"
+                  >
+                    +5 Quantity
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ── Category Modal ────────────────────────────────────────────────── */}
       {showCategoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Tag className="h-5 w-5 text-indigo-400" /> Add Product Category</h2>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-slate-800 bg-slate-950 p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold flex items-center gap-2"><Tag className="h-5 w-5 text-indigo-400" /> Add Product Category</h2>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="rounded-lg p-1.5 hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
             <form onSubmit={handleCreateCategory} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-400">Category Name</label>
+                <label className={labelCls}>Category Name</label>
                 <input
                   type="text" required value={catName} onChange={(e) => setCatName(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                  className={inputCls} placeholder="Electronics"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-400">Description</label>
+                <label className={labelCls}>Description</label>
                 <textarea
                   value={catDesc} onChange={(e) => setCatDesc(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden min-h-[80px]"
+                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden min-h-[80px] text-base sm:text-sm focus:border-indigo-500 focus:ring-1"
+                  placeholder="Electronics products and accessories"
                 />
               </div>
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4">
                 <button
                   type="button" onClick={() => setShowCategoryModal(false)}
-                  className="rounded-lg border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  className="rounded-lg border border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 w-full sm:w-auto"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit" disabled={loading}
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                  className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 w-full sm:w-auto"
                 >
                   Submit
                 </button>
@@ -296,43 +376,51 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Product Modal */}
+      {/* ── Product Modal ─────────────────────────────────────────────────── */}
       {showProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Layers className="h-5 w-5 text-indigo-400" /> Register Product & Stock</h2>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-t-2xl sm:rounded-2xl border border-slate-800 bg-slate-950 p-5 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold flex items-center gap-2"><Layers className="h-5 w-5 text-indigo-400" /> Register Product & Stock</h2>
+              <button
+                onClick={() => setShowProductModal(false)}
+                className="rounded-lg p-1.5 hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
             <form onSubmit={handleCreateProduct} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Product Name</label>
+                  <label className={labelCls}>Product Name</label>
                   <input
                     type="text" required value={prodName} onChange={(e) => setProdName(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1"
+                    className={inputCls} placeholder="Apex V2 Headphones"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">SKU (Unique Barcode)</label>
+                  <label className={labelCls}>SKU (Unique Barcode)</label>
                   <input
                     type="text" required value={prodSku} onChange={(e) => setProdSku(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden focus:border-indigo-500 focus:ring-1"
+                    className={inputCls} placeholder="HP-APEX"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-400">Description</label>
+                <label className={labelCls}>Description</label>
                 <input
                   type="text" value={prodDesc} onChange={(e) => setProdDesc(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                  className={inputCls} placeholder="Premium noise-canceling headphones"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Branch Location</label>
+                  <label className={labelCls}>Branch Location</label>
                   <select
                     required value={prodFran} onChange={(e) => setProdFran(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-slate-200 outline-hidden"
+                    className={inputCls}
                   >
                     <option value="">Select Branch</option>
                     {franchises.map((f) => (
@@ -341,10 +429,10 @@ export default function ProductsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Category</label>
+                  <label className={labelCls}>Category</label>
                   <select
                     required value={prodCat} onChange={(e) => setProdCat(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-slate-200 outline-hidden"
+                    className={inputCls}
                   >
                     <option value="">Select Category</option>
                     {categories.map((c) => (
@@ -354,74 +442,74 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Purchase Price</label>
+                  <label className={labelCls}>Purchase Price</label>
                   <input
                     type="number" step="0.01" required value={purchasePrice} onChange={(e) => setPurchasePrice(parseFloat(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Selling Price</label>
+                  <label className={labelCls}>Selling Price</label>
                   <input
                     type="number" step="0.01" required value={sellingPrice} onChange={(e) => setSellingPrice(parseFloat(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Tax Rate (%)</label>
+                  <label className={labelCls}>Tax Rate (%)</label>
                   <input
                     type="number" step="0.01" required value={taxRate} onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400">Unit</label>
+                  <label className={labelCls}>Unit</label>
                   <input
                     type="text" required value={unit} onChange={(e) => setUnit(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                    className={inputCls}
                   />
                 </div>
               </div>
 
               <div className="space-y-4 rounded-xl border border-slate-900 bg-slate-900/20 p-4">
                 <h3 className="text-sm font-semibold leading-none">Initial Inventory</h3>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider font-mono">Quantity</label>
+                    <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">Quantity</label>
                     <input
                       type="number" required value={initialQty} onChange={(e) => setInitialQty(parseInt(e.target.value, 10))}
-                      className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider font-mono">Reorder Level</label>
+                    <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">Reorder Level</label>
                     <input
                       type="number" required value={reorderLevel} onChange={(e) => setReorderLevel(parseInt(e.target.value, 10))}
-                      className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider font-mono">Aisle / Bin</label>
+                    <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-mono">Aisle / Bin</label>
                     <input
                       type="text" placeholder="e.g. Aisle 4B" value={inventoryLoc} onChange={(e) => setInventoryLoc(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-slate-200 outline-hidden"
+                      className={inputCls}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4">
                 <button
                   type="button" onClick={() => setShowProductModal(false)}
-                  className="rounded-lg border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  className="rounded-lg border border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 w-full sm:w-auto"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit" disabled={loading}
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                  className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 w-full sm:w-auto"
                 >
                   Submit
                 </button>
