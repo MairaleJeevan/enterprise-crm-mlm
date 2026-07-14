@@ -24,6 +24,22 @@ model User {
   payouts         Payout[]
   advisorPayments Payment[]
   customerProfile Customer?    // Gold Card holder account
+
+  // MLM Enhancements
+  referralCode        String?              @unique
+  kycStatus           String               @default("PENDING") // PENDING, SUBMITTED, VERIFIED, REJECTED
+  exitDate            DateTime?
+  exitReason          String?
+  kyc                 MemberKYC?
+  heldCommissions     HeldCommission[]
+  commissionReleases  CommissionRelease[]
+  founderTracking     FounderTracking?
+  policies            Policy[]
+  referral            Referral?
+  memberAwards        MemberAward[]
+  founderAppointments FounderAppointment[]
+  welcomeCallSchedules WelcomeCallSchedule[]
+  notifications       Notification[]
 }
 
 model StoreUser {
@@ -299,3 +315,250 @@ model GoldInvoice {
   total         Float
   createdAt     DateTime  @default(now())
 }
+
+model MemberKYC {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id])
+  
+  // Aadhar Details
+  aadharNumber        String?
+  aadharFrontFile     String?   // Base64
+  aadharBackFile      String?   // Base64
+  aadharVerified      Boolean   @default(false)
+  
+  // PAN Details
+  panNumber           String?
+  panFile             String?   // Base64
+  panVerified         Boolean   @default(false)
+  
+  // Bank Details
+  accountNumber       String?
+  ifscCode            String?
+  bankName            String?
+  branchName          String?
+  accountHolder       String?
+  bankVerified        Boolean   @default(false)
+  
+  // References
+  ref1Name            String?
+  ref1Phone           String?
+  ref1Relationship    String?
+  ref2Name            String?
+  ref2Phone           String?
+  ref2Relationship    String?
+  
+  // Nominee Details
+  nomineeName         String?
+  nomineeRelationship String?
+  nomineeAge          Int?
+  nomineePhone        String?
+  nomineeAddress      String?
+  
+  status              String    @default("PENDING") // PENDING, SUBMITTED, VERIFIED, REJECTED
+  submittedAt         DateTime?
+  verifiedAt          DateTime?
+  verifiedBy          String?   // User ID of verified admin
+  rejectionReason     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model HeldCommission {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  amount            Float
+  sponsoredMemberId String?
+  directMemberCount Int?
+  status            String    @default("HELD") // HELD, RELEASED
+  heldDate          DateTime  @default(now())
+  releasedDate      DateTime?
+  releaseReason     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model CommissionRelease {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  totalHeldAmount Float
+  releasedAmount  Float
+  releaseDate     DateTime  @default(now())
+  releaseType     String    // AUTO_RELEASE, MANUAL_RELEASE
+  triggeredBy     String    // SYSTEM, ADMIN
+  status          String    @default("PROCESSED")
+  createdAt       DateTime  @default(now())
+}
+
+model FounderTracking {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+  totalEarnings     Float     @default(0.0)
+  currentIncome     Float     @default(0.0)
+  exitThreshold     Float     @default(25900000) // ₹2.59 Crore
+  exitTriggered     Boolean   @default(false)
+  exitDate          DateTime?
+  exitMessage       String?
+  certificateNumber String?
+  certificateFile   String?
+  farewellPackage   String?   // JSON string
+  recognitionVideo  String?
+  exitBonus         Float?
+  exitBonusPaid     Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Policy {
+  id                        String    @id @default(cuid())
+  policyNumber              String    @unique
+  userId                    String
+  user                      User      @relation(fields: [userId], references: [id])
+  policyType                String    // Life, Health, Term, Endowment
+  coverageAmount            Float
+  premiumAmount             Float
+  premiumFrequency          String    // Monthly, Quarterly, Yearly
+  startDate                 DateTime
+  endDate                   DateTime
+  status                    String    @default("PENDING") // PENDING, ACTIVE, EXPIRED, CANCELLED
+  policyDocument            String?   // Base64 or URL
+  policySummary             String?   // JSON String
+  underwrittenBy            String?
+  underwrittenAt            DateTime?
+  policyHolderName          String?
+  policyHolderDob           DateTime?
+  policyHolderAddress       String?
+  policyNomineeName         String?
+  policyNomineeRelationship String?
+  assignedBy                String?
+  assignedAt                DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+}
+
+model Referral {
+  id                  String            @id @default(cuid())
+  referralCode        String            @unique
+  userId              String            @unique
+  user                User              @relation(fields: [userId], references: [id])
+  totalReferrals      Int               @default(0)
+  successfulReferrals Int               @default(0)
+  referralEarnings    Float             @default(0.0)
+  qrCode              String?           // Base64 QR code image
+  expiryDate          DateTime?
+  isActive            Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  histories           ReferralHistory[]
+}
+
+model ReferralHistory {
+  id               String   @id @default(cuid())
+  referralId       String
+  referral         Referral @relation(fields: [referralId], references: [id])
+  referredMemberId String
+  commissionAmount Float?
+  status           String   @default("PENDING") // PENDING, PAID
+  createdAt        DateTime @default(now())
+}
+
+model Award {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  category     String        // Performance, Milestone, Leadership, Special
+  type         String        // Trophy, Cash, Voucher, Trip, Electronic, Gift
+  value        Float?
+  image        String?
+  criteria     String?       // JSON String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  memberAwards MemberAward[]
+}
+
+model MemberAward {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  awardId           String
+  award             Award     @relation(fields: [awardId], references: [id])
+  achievedDate      DateTime  @default(now())
+  presentedBy       String?
+  presentationDate  DateTime?
+  certificateNumber String?
+  certificateFile   String?
+  status            String    @default("EARNED") // EARNED, CLAIMED, DELIVERED
+  claimedAt         DateTime?
+  deliveryDetails   String?   // JSON String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model FounderAppointment {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  appointmentFee   Float     @default(25900000)
+  paymentStatus    String    @default("PENDING") // PENDING, PARTIAL, COMPLETED
+  paymentDetails   String?   // JSON String
+  appointedBy      String
+  appointedAt      DateTime  @default(now())
+  teamId           String?
+  teamName         String?
+  founderLevel     String    @default("FOUNDER")
+  isActive         Boolean   @default(true)
+  specialPrivileges String?   // JSON String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model JoiningFeeConfig {
+  id            String    @id @default(cuid())
+  amount        Float     @default(3500)
+  currency      String    @default("INR")
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime?
+  setBy         String?
+  reason        String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model JoiningFeeLog {
+  id             String   @id @default(cuid())
+  previousAmount Float?
+  newAmount      Float
+  changedBy      String?
+  changedAt      DateTime @default(now())
+  reason         String?
+}
+
+model WelcomeCallSchedule {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  scheduledDate DateTime
+  status       String    @default("PENDING") // PENDING, COMPLETED, MISSED
+  notes        String?
+  assignedTo   String?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String   // INFO, SYSTEM, KYC, COMMISSION, PROMOTION, EXITED
+  createdAt DateTime @default(now())
+}
+

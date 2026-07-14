@@ -47,16 +47,24 @@ export class PaymentService {
       throw new BadRequestException('Customer already has an active Gold Membership Card');
     }
 
+    // Fetch active joining fee from Database
+    const feeConfig = await this.prisma.joiningFeeConfig.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const feeAmountInr = feeConfig ? feeConfig.amount : 3500;
+    const feeAmountPaise = feeAmountInr * 100;
+
     const shortId = dto.customerId.slice(-8);
     const ts = Date.now().toString().slice(-8);
     const receipt = `gc_${shortId}_${ts}`;  // max ~21 chars
-    const order = await this.razorpay.createOrder(GOLD_CARD_PRICE_PAISE, receipt);
+    const order = await this.razorpay.createOrder(feeAmountPaise, receipt);
 
     // Store pending payment record
     const payment = await this.prisma.payment.create({
       data: {
         razorpayOrderId: order.id,
-        amount: GOLD_CARD_PRICE_INR,
+        amount: feeAmountInr,
         currency: 'INR',
         status: 'PENDING',
         customerId: dto.customerId,
@@ -68,7 +76,7 @@ export class PaymentService {
     return {
       orderId: order.id,
       paymentId: payment.id,
-      amount: GOLD_CARD_PRICE_PAISE,
+      amount: feeAmountPaise,
       currency: 'INR',
       keyId: process.env.RAZORPAY_KEY_ID,
       customerName: `${customer.firstName} ${customer.lastName || ''}`.trim(),
@@ -177,6 +185,11 @@ export class PaymentService {
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
+    // Auto-generate unique referral code
+    const year = new Date().getFullYear();
+    const randCode = Math.floor(10000 + Math.random() * 90000);
+    const referralCode = `REF-${year}-${randCode}`;
+
     const newUser = await tx.user.create({
       data: {
         email,
@@ -184,6 +197,24 @@ export class PaymentService {
         firstName: customer.firstName,
         lastName: customer.lastName ?? null,
         role: 'MLM_DISTRIBUTOR',
+        referralCode,
+        kycStatus: 'PENDING',
+      },
+    });
+
+    // Generate base64 sharing QR code
+    const clientUrl = `https://enterprise-crm-mlm.vercel.app/login?ref=${referralCode}`;
+    const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(clientUrl)}`;
+
+    // Create Referral Dashboard record for this new user
+    await tx.referral.create({
+      data: {
+        userId: newUser.id,
+        referralCode,
+        qrCode,
+        totalReferrals: 0,
+        successfulReferrals: 0,
+        referralEarnings: 0,
       },
     });
 
@@ -198,6 +229,29 @@ export class PaymentService {
         rank: 'Sales Advisor',
       },
     });
+
+    // Create Referral History log under the selling advisor's profile
+    const advisorReferral = await tx.referral.findUnique({ where: { userId: advisorId } });
+    if (advisorReferral) {
+      await tx.referralHistory.create({
+        data: {
+          referralId: advisorReferral.id,
+          referredMemberId: newUser.id,
+          status: 'PAID',
+          commissionAmount: 500, // Flat ₹500 referral credit
+        },
+      });
+
+      // Update advisor referral metrics
+      await tx.referral.update({
+        where: { id: advisorReferral.id },
+        data: {
+          totalReferrals: { increment: 1 },
+          successfulReferrals: { increment: 1 },
+          referralEarnings: { increment: 500 },
+        },
+      });
+    }
 
     // Re-evaluate the advisor's rank now they have a new direct member
     if (advisorNode) {
@@ -233,17 +287,8 @@ export class PaymentService {
     });
     if (!advisorNode) return;
 
-    // 1. Pay the selling advisor their flat commission
-    await tx.commission.create({
-      data: {
-        userId: advisorId,
-        amount: COMMISSION_SELLING_ADVISOR,
-        type: 'GOLD_CARD_ADVISOR',
-        description: `Selling advisor commission — Gold Card sale`,
-        status: 'PENDING',
-        saleId: paymentId,
-      },
-    });
+    // 1. Pay/Hold selling advisor commission
+    await this.processCommission(tx, advisorId, COMMISSION_SELLING_ADVISOR, 'GOLD_CARD_ADVISOR', 'Selling advisor commission — Gold Card sale', paymentId);
 
     // Ranks still owed payment as we walk upward
     const pending = new Map<string, number>([
@@ -269,20 +314,159 @@ export class PaymentService {
 
       const amount = pending.get(node.rank);
       if (amount !== undefined) {
-        await tx.commission.create({
-          data: {
-            userId: node.userId,
-            amount,
-            type: rankType[node.rank],
-            description: `${node.rank} commission — Gold Card sale`,
-            status: 'PENDING',
-            saleId: paymentId,
-          },
-        });
+        await this.processCommission(
+          tx,
+          node.userId,
+          amount,
+          rankType[node.rank],
+          `${node.rank} commission — Gold Card sale`,
+          paymentId,
+        );
         pending.delete(node.rank); // pay each rank only once
       }
 
       currentNodeId = node.parentId;
+    }
+  }
+
+  /**
+   * Helper to evaluate whether a commission should be held or paid immediately,
+   * and tracks founder earnings for the auto-exit flow.
+   */
+  private async processCommission(
+    tx: any,
+    userId: string,
+    amount: number,
+    type: string,
+    description: string,
+    paymentId: string,
+  ) {
+    const node = await tx.mlmNode.findUnique({
+      where: { userId },
+    });
+
+    if (!node) return;
+
+    // Founder Member gets released immediately, others are HELD
+    if (node.rank === 'Founder Member') {
+      await tx.commission.create({
+        data: {
+          userId,
+          amount,
+          type,
+          description,
+          status: 'PENDING',
+          saleId: paymentId,
+        },
+      });
+
+      // Track Founder Earnings
+      let tracker = await tx.founderTracking.findUnique({
+        where: { userId },
+      });
+
+      if (!tracker) {
+        tracker = await tx.founderTracking.create({
+          data: {
+            userId,
+            totalEarnings: 0,
+            exitThreshold: 25900000,
+          },
+        });
+      }
+
+      const updatedEarnings = tracker.totalEarnings + amount;
+
+      await tx.founderTracking.update({
+        where: { userId },
+        data: {
+          totalEarnings: updatedEarnings,
+          currentIncome: tracker.currentIncome + amount,
+        },
+      });
+
+      // Check Auto-Exit Threshold (₹2.59 Crore)
+      if (updatedEarnings >= tracker.exitThreshold && !tracker.exitTriggered) {
+        const rand = Math.floor(100000 + Math.random() * 900000);
+        const certificateNumber = `EXIT-CERT-${new Date().getFullYear()}-${rand}`;
+        const exitBonus = updatedEarnings * 0.02; // 2% Exit Bonus (₹5,18,000)
+
+        // 1. Pay exit bonus
+        await tx.commission.create({
+          data: {
+            userId,
+            amount: exitBonus,
+            type: 'RANK_BONUS',
+            description: '2% Founder Exit Bonus',
+            status: 'PENDING',
+          },
+        });
+
+        // 2. Log Exit tracking
+        await tx.founderTracking.update({
+          where: { userId },
+          data: {
+            exitTriggered: true,
+            exitDate: new Date(),
+            exitBonus,
+            exitBonusPaid: true,
+            certificateNumber,
+            exitMessage: "Congratulations! You've reached ₹2.59 Crore! You are now exiting the system.",
+            farewellPackage: JSON.stringify({
+              package: "Special farewell package and recognition ceremony",
+              status: "SCHEDULED",
+            }),
+          },
+        });
+
+        // 3. Update User rank to FOUNDER_EXITED
+        await tx.mlmNode.update({
+          where: { userId },
+          data: { rank: 'FOUNDER_EXITED' },
+        });
+
+        // 4. Send Notifications
+        await tx.notification.create({
+          data: {
+            userId,
+            title: 'Congratulations on your Auto-Exit! 🎓🏆',
+            message: "You've reached ₹2.59 Crore! You are now exiting the system. A farewell package has been created.",
+            type: 'EXITED',
+          },
+        });
+
+        const adminUser = await tx.user.findFirst({ where: { role: 'ADMIN' } });
+        if (adminUser) {
+          await tx.notification.create({
+            data: {
+              userId: adminUser.id,
+              title: 'Founder Exited the System',
+              message: `Founder Member with ID ${userId.slice(-8)} has hit the ₹2.59 Crore earnings cap and successfully exited.`,
+              type: 'EXITED',
+            },
+          });
+        }
+      }
+    } else {
+      // Sales Advisor, TL, and TM are HELD
+      await tx.heldCommission.create({
+        data: {
+          userId,
+          amount,
+          sponsoredMemberId: paymentId, // reference to the triggering sale/payment
+          status: 'HELD',
+        },
+      });
+
+      // Send Info Notification
+      await tx.notification.create({
+        data: {
+          userId,
+          title: 'Commission Held ⏳',
+          message: `A commission of ₹${amount} has been held until you meet your rank's promotion criteria.`,
+          type: 'KYC',
+        },
+      });
     }
   }
 

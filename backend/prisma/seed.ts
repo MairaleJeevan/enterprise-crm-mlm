@@ -12,6 +12,20 @@ async function main() {
   console.log('🌱 Starting database seeding...');
 
   // Clear existing records in enterprise schema
+  await prisma.notification.deleteMany({});
+  await prisma.welcomeCallSchedule.deleteMany({});
+  await prisma.joiningFeeLog.deleteMany({});
+  await prisma.joiningFeeConfig.deleteMany({});
+  await prisma.founderAppointment.deleteMany({});
+  await prisma.memberAward.deleteMany({});
+  await prisma.award.deleteMany({});
+  await prisma.referralHistory.deleteMany({});
+  await prisma.referral.deleteMany({});
+  await prisma.policy.deleteMany({});
+  await prisma.founderTracking.deleteMany({});
+  await prisma.commissionRelease.deleteMany({});
+  await prisma.heldCommission.deleteMany({});
+  await prisma.memberKYC.deleteMany({});
   await prisma.commission.deleteMany({});
   await prisma.payout.deleteMany({});
   await prisma.mlmNode.deleteMany({});
@@ -20,6 +34,12 @@ async function main() {
   await prisma.inventory.deleteMany({});
   await prisma.product.deleteMany({});
   await prisma.category.deleteMany({});
+
+  // Delete payment-related items before deleting Customer/User
+  await prisma.goldInvoice.deleteMany({});
+  await prisma.goldCard.deleteMany({});
+  await prisma.payment.deleteMany({});
+
   await prisma.customer.deleteMany({});
   await prisma.storeUser.deleteMany({});
   await prisma.user.deleteMany({});
@@ -240,6 +260,71 @@ async function main() {
     },
   });
   console.log('✅ Customer created');
+
+  // 6. Create Joining Fee Configuration
+  await prisma.joiningFeeConfig.create({
+    data: {
+      amount: 3500,
+      currency: 'INR',
+      effectiveFrom: new Date(),
+      isActive: true,
+      reason: 'Initial setup of default joining fee',
+      setBy: 'admin',
+    },
+  });
+  console.log('✅ Joining Fee Config created');
+
+  // 7. Create Default Awards & Milestones
+  await prisma.award.createMany({
+    data: [
+      {
+        name: 'Bronze Performance Milestone',
+        description: 'Personally recruit 5 direct downline members.',
+        category: 'Milestone',
+        type: 'Trophy',
+        value: 0,
+        criteria: JSON.stringify({ milestone: 'Bronze', directCount: 5 }),
+        isActive: true,
+      },
+      {
+        name: 'Silver Performance Milestone',
+        description: 'Personally recruit 15 direct downline members.',
+        category: 'Milestone',
+        type: 'Voucher',
+        value: 5000,
+        criteria: JSON.stringify({ milestone: 'Silver', directCount: 15 }),
+        isActive: true,
+      },
+      {
+        name: 'Gold Leadership Trophy',
+        description: 'Personally recruit 30 direct downline members (Team Leader promotion).',
+        category: 'Milestone',
+        type: 'Electronic',
+        value: 25000,
+        criteria: JSON.stringify({ milestone: 'Gold', directCount: 30 }),
+        isActive: true,
+      },
+      {
+        name: 'Platinum Excellence Payout',
+        description: 'Develop a total organizational team size of 100 members.',
+        category: 'Milestone',
+        type: 'Cash',
+        value: 100000,
+        criteria: JSON.stringify({ milestone: 'Platinum', teamCount: 100 }),
+        isActive: true,
+      },
+      {
+        name: 'Diamond Recognition & Luxury Trip',
+        description: 'Develop a total organizational team size of 500 members.',
+        category: 'Milestone',
+        type: 'Trip',
+        value: 500000,
+        criteria: JSON.stringify({ milestone: 'Diamond', teamCount: 500 }),
+        isActive: true,
+      },
+    ],
+  });
+  console.log('✅ Default Milestone Awards created');
 
   console.log('🌱 Seeding finished successfully!');
 }

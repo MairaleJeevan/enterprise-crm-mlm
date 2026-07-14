@@ -32,6 +32,8 @@ export default function DashboardOverview() {
   const [lowStock, setLowStock] = useState<any[]>([]);
   const [treeData, setTreeData] = useState<any>(null);
   const [commissions, setCommissions] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [heldData, setHeldData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -47,7 +49,11 @@ export default function DashboardOverview() {
       promises.push(api.get('/api/mlm/tree').then((res) => setTreeData(res.data)).catch(() => {}));
       promises.push(api.get('/api/sales').then((res) => setSales(res.data)).catch(() => {}));
       promises.push(api.get('/api/mlm/commissions').then((res) => setCommissions(res.data)).catch(() => {}));
+      promises.push(api.get('/api/mlm/held-commissions').then((res) => setHeldData(res.data)).catch(() => {}));
     }
+
+    // Fetch system notifications for all logged-in profiles
+    promises.push(api.get('/api/mlm/notifications').then((res) => setNotifications(res.data)).catch(() => {}));
 
     Promise.all(promises).finally(() => setLoading(false));
   }, [user]);
@@ -70,6 +76,16 @@ export default function DashboardOverview() {
   };
 
   const displayRole = getDisplayRole();
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post('/api/mlm/notifications/read');
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+      toast.success('All notifications marked as read');
+    } catch {
+      toast.error('Failed to update notifications');
+    }
+  };
 
   if (loading) {
     return (
@@ -299,6 +315,40 @@ export default function DashboardOverview() {
             </button>
           </div>
         </div>
+
+        {/* System Notifications widget */}
+        <div className="rounded-xl border border-slate-900 bg-slate-950/30 p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+            <h2 className="text-sm font-bold text-slate-300 flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-indigo-400" /> Notifications & Alerts
+            </h2>
+            {notifications.some((n) => !n.isRead) && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 hover:text-indigo-300"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-1">
+            {notifications.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4 col-span-2">No recent notifications</p>
+            ) : (
+              notifications.map((n) => (
+                <div key={n.id} className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+                  n.isRead ? 'border-slate-900 bg-slate-950/20' : 'border-indigo-500/20 bg-indigo-500/5'
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-slate-200">{n.title}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-slate-400 leading-relaxed">{n.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -310,6 +360,7 @@ export default function DashboardOverview() {
     const sponsorName = treeData?.parent?.user ? `${treeData.parent.user.firstName} ${treeData.parent.user.lastName || ''}` : 'Company Node';
     const totalCommissions = commissions.reduce((sum, c) => sum + c.amount, 0);
     const pendingCommissions = commissions.filter(c => c.status === 'PENDING').reduce((sum, c) => sum + c.amount, 0);
+    const totalHeld = heldData?.totalHeld || 0;
 
     return (
       <div className="space-y-8">
@@ -327,8 +378,30 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* 4 Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Exited Founder Banner */}
+        {treeData?.rank === 'FOUNDER_EXITED' && (
+          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-950 p-6 space-y-4 shadow-xl">
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 animate-pulse shrink-0">
+                <Award className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-lg font-black text-slate-100 animate-bounce">Congratulations on your Auto-Exit! 🎓🏆</h2>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  You have successfully reached the maximum earnings threshold of <strong>₹2.59 Crore</strong>! 
+                  As a Founder Member, you are now auto-exited from the active downline commission walk, with your lifetime achievements cemented in the hall of fame.
+                </p>
+                <div className="text-xs text-slate-500 mt-2 flex flex-col sm:flex-row gap-4 font-mono">
+                  <span>Exit Certificate: <strong>Active</strong></span>
+                  <span>Exit Bonus (2%): <strong>₹5,18,000 Paid</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5 Stats Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           <div className="rounded-xl border border-slate-900 bg-slate-950/40 p-5 flex flex-col justify-between h-32 relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div>
@@ -371,6 +444,17 @@ export default function DashboardOverview() {
               <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">₹{pendingCommissions.toFixed(0)} Pend</span>
             </div>
             <p className="text-[10px] text-slate-500 mt-2">Direct recruiter + matching bonuses</p>
+          </div>
+
+          <div className="rounded-xl border border-slate-900 bg-slate-950/40 p-5 flex flex-col justify-between h-32 relative overflow-hidden">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Held Commissions</p>
+                <h3 className="text-2xl font-bold mt-1 text-amber-500">₹{totalHeld.toFixed(2)}</h3>
+              </div>
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">Held</span>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2">Released on rank promotion milestones</p>
           </div>
         </div>
 
@@ -441,6 +525,40 @@ export default function DashboardOverview() {
             >
               Open Network Tree
             </button>
+          </div>
+        </div>
+
+        {/* System Notifications widget at bottom */}
+        <div className="rounded-xl border border-slate-900 bg-slate-950/30 p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+            <h2 className="text-sm font-bold text-slate-300 flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-indigo-400" /> Notifications & Alerts
+            </h2>
+            {notifications.some((n) => !n.isRead) && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 hover:text-indigo-300"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-1">
+            {notifications.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4 col-span-2">No recent notifications</p>
+            ) : (
+              notifications.map((n) => (
+                <div key={n.id} className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+                  n.isRead ? 'border-slate-900 bg-slate-950/20' : 'border-indigo-500/20 bg-indigo-500/5'
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-slate-200">{n.title}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-slate-400 leading-relaxed">{n.message}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -646,6 +764,40 @@ export default function DashboardOverview() {
                     <span className="font-bold text-red-400">{p.inventory?.quantity || 0}</span>
                     <span className="text-[10px] text-slate-500 block">Reorder: {p.inventory?.reorderLevel}</span>
                   </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* System Notifications widget */}
+        <div className="rounded-xl border border-slate-900 bg-slate-950/30 p-6 space-y-4 col-span-1 md:col-span-2">
+          <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+            <h2 className="text-sm font-bold text-slate-300 flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-indigo-400" /> Notifications & Alerts
+            </h2>
+            {notifications.some((n) => !n.isRead) && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 hover:text-indigo-300"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-1">
+            {notifications.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4 col-span-2">No recent notifications</p>
+            ) : (
+              notifications.map((n) => (
+                <div key={n.id} className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+                  n.isRead ? 'border-slate-900 bg-slate-950/20' : 'border-indigo-500/20 bg-indigo-500/5'
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-slate-200">{n.title}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-slate-400 leading-relaxed">{n.message}</p>
                 </div>
               ))
             )}

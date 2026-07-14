@@ -35,4 +35,19 @@ export class MlmController {
   createPayout(@Req() req) {
     return this.mlmService.createPayout(req.user.id);
   }
+
+  @Get('notifications')
+  getNotifications(@Req() req) {
+    return this.mlmService.getNotifications(req.user.id);
+  }
+
+  @Post('notifications/read')
+  markNotificationsRead(@Req() req) {
+    return this.mlmService.markNotificationsRead(req.user.id);
+  }
+
+  @Get('held-commissions')
+  getHeldCommissions(@Req() req) {
+    return this.mlmService.getHeldCommissions(req.user.id);
+  }
 }

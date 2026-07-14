@@ -24,6 +24,14 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
+    // Auto-generate referral code for MLM_DISTRIBUTOR
+    let referralCode: string | null = null;
+    if (dto.role === 'MLM_DISTRIBUTOR') {
+      const year = new Date().getFullYear();
+      const rand = Math.floor(10000 + Math.random() * 90000);
+      referralCode = `REF-${year}-${rand}`;
+    }
+
     return this.prisma.$transaction(async (tx) => {
       // 1. Create User
       const user = await tx.user.create({
@@ -33,8 +41,27 @@ export class AuthService {
           firstName: dto.firstName,
           lastName: dto.lastName,
           role: dto.role,
+          referralCode,
+          kycStatus: dto.role === 'MLM_DISTRIBUTOR' ? 'PENDING' : 'VERIFIED',
         },
       });
+
+      // Initialize Referral Dashboard record
+      if (dto.role === 'MLM_DISTRIBUTOR' && referralCode) {
+        const clientUrl = `https://enterprise-crm-mlm.vercel.app/login?ref=${referralCode}`;
+        const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(clientUrl)}`;
+
+        await tx.referral.create({
+          data: {
+            userId: user.id,
+            referralCode,
+            qrCode,
+            totalReferrals: 0,
+            successfulReferrals: 0,
+            referralEarnings: 0,
+          },
+        });
+      }
 
       // 2. Link to Franchise if STORE_USER
       if (dto.role === 'STORE_USER') {
@@ -96,6 +123,29 @@ export class AuthService {
             position: parentNodeId ? position : null,
           },
         });
+
+        // Track the referral signup log under the sponsor
+        if (dto.sponsorId) {
+          const sponsorReferral = await tx.referral.findUnique({
+            where: { userId: dto.sponsorId },
+          });
+          if (sponsorReferral) {
+            await tx.referralHistory.create({
+              data: {
+                referralId: sponsorReferral.id,
+                referredMemberId: user.id,
+                status: 'PENDING',
+                commissionAmount: 0.0,
+              },
+            });
+            await tx.referral.update({
+              where: { id: sponsorReferral.id },
+              data: {
+                totalReferrals: { increment: 1 },
+              },
+            });
+          }
+        }
 
         if (parentNodeId) {
           await this.mlmRankService.checkAndUpgradeRank(tx, parentNodeId);

@@ -20,6 +20,12 @@ import {
   UserCog,
   Menu,
   X,
+  FileText,
+  Share2,
+  Award,
+  ShieldCheck,
+  Settings,
+  UserCheck,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -89,8 +95,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Follow-ups', href: '/dashboard/followups', icon: Calendar, roles: ['Super Admin', 'Franchise Owner', 'Store Manager', 'Sales Executive'] },
     { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['Super Admin', 'Franchise Owner', 'Store Manager'] },
     { name: 'MLM Downline', href: '/dashboard/mlm', icon: Network, roles: ['Super Admin', 'MLM Distributor'] },
+    { name: 'Referral Program', href: '/dashboard/referrals', icon: Share2, roles: ['MLM Distributor'] },
+    { name: 'My Policy', href: '/dashboard/policy', icon: FileText, roles: ['MLM Distributor'] },
+    { name: 'My Awards', href: '/dashboard/awards', icon: Award, roles: ['MLM Distributor'] },
+    { name: 'KYC Document upload', href: '/dashboard/kyc', icon: ShieldCheck, roles: ['MLM Distributor', 'Super Admin'] },
     { name: 'Gold Card Sales', href: '/dashboard/gold-card', icon: Star, roles: ['Sales Executive', 'Store Manager', 'Franchise Owner', 'MLM Distributor'] },
     { name: 'Payment Dashboard', href: '/dashboard/gold-card/admin', icon: BadgeDollarSign, roles: ['Super Admin'] },
+    { name: 'Appoint Founder', href: '/dashboard/admin/founder-appointment', icon: UserCheck, roles: ['Super Admin'] },
+    { name: 'Joining Fee Config', href: '/dashboard/admin/joining-fee', icon: Settings, roles: ['Super Admin'] },
+    { name: 'Assign Policies', href: '/dashboard/admin/policy-assign', icon: FileText, roles: ['Super Admin'] },
     { name: 'Manage Users', href: '/dashboard/users', icon: UserCog, roles: ['Super Admin'] },
   ];
 

@@ -135,4 +135,35 @@ export class MlmService {
       return payout;
     });
   }
+
+  async getNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+  }
+
+  async markNotificationsRead(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true },
+    });
+    return { success: true };
+  }
+
+  async getHeldCommissions(userId: string) {
+    const held = await this.prisma.heldCommission.findMany({
+      where: { userId },
+      orderBy: { heldDate: 'desc' },
+    });
+    const totalHeld = held.filter(h => h.status === 'HELD').reduce((acc, h) => acc + h.amount, 0);
+    const totalReleased = held.filter(h => h.status === 'RELEASED').reduce((acc, h) => acc + h.amount, 0);
+
+    return {
+      heldCommissions: held,
+      totalHeld,
+      totalReleased,
+    };
+  }
 }
