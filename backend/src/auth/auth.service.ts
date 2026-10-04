@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { MlmRankService } from '../mlm/mlm-rank.service';
+import { buildReferralLinks } from '../mlm/referral-links';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -48,8 +49,7 @@ export class AuthService {
 
       // Initialize Referral Dashboard record
       if (dto.role === 'MLM_DISTRIBUTOR' && referralCode) {
-        const clientUrl = `https://enterprise-crm-mlm.vercel.app/login?ref=${referralCode}`;
-        const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(clientUrl)}`;
+        const { qrCode } = buildReferralLinks(referralCode);
 
         await tx.referral.create({
           data: {

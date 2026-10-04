@@ -9,6 +9,7 @@ import { RazorpayService } from './razorpay.service';
 import { GoldCardService } from './goldcard.service';
 import { InvoiceService } from './invoice.service';
 import { MlmRankService } from '../mlm/mlm-rank.service';
+import { buildReferralLinks } from '../mlm/referral-links';
 import { CreateOrderDto, VerifyPaymentDto } from './dto/payment.dto';
 import * as bcrypt from 'bcryptjs';
 
@@ -203,8 +204,7 @@ export class PaymentService {
     });
 
     // Generate base64 sharing QR code
-    const clientUrl = `https://enterprise-crm-mlm.vercel.app/login?ref=${referralCode}`;
-    const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(clientUrl)}`;
+    const { qrCode } = buildReferralLinks(referralCode);
 
     // Create Referral Dashboard record for this new user
     await tx.referral.create({

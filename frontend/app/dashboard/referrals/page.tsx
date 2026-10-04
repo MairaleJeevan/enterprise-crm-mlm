@@ -26,7 +26,8 @@ export default function ReferralsPage() {
 
   const handleCopyLink = () => {
     if (!data) return;
-    const link = `https://enterprise-crm-mlm.vercel.app/login?ref=${data.referralCode}`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const link = `${siteUrl}/login?ref=${data.referralCode}`;
     navigator.clipboard.writeText(link);
     toast.success('Referral link copied to clipboard!');
   };

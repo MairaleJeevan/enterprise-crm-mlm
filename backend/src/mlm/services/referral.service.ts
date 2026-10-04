@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { buildReferralLinks } from '../referral-links';
 
 @Injectable()
 export class ReferralService {
@@ -26,8 +27,7 @@ export class ReferralService {
         });
       }
 
-      const clientUrl = `https://enterprise-crm-mlm.vercel.app/login?ref=${refCode}`;
-      const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(clientUrl)}`;
+      const { qrCode } = buildReferralLinks(refCode);
 
       referral = await this.prisma.referral.create({
         data: {
@@ -91,8 +91,7 @@ export class ReferralService {
         if (!user.referralCode) {
           await this.prisma.user.update({ where: { id: referrerId }, data: { referralCode: refCode } });
         }
-        const clientUrl = `https://enterprise-crm-mlm.vercel.app/login?ref=${refCode}`;
-        const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(clientUrl)}`;
+        const { qrCode } = buildReferralLinks(refCode);
         
         referral = await this.prisma.referral.create({
           data: {
